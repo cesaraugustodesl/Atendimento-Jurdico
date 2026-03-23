@@ -1,9 +1,17 @@
 import { Mail, MapPin, Phone, Scale } from "lucide-react";
-import { type Page, primaryNav, siteConfig } from "../config/site";
+import RouteLink from "./RouteLink";
+import { primaryNav, siteConfig, pagePaths } from "../config/site";
 
 interface FooterProps {
-  onNavigate: (page: Page) => void;
+  onNavigate: (href: string) => void;
 }
+
+const footerContentLinks = [
+  { href: "/advogado-trabalhista-em-sao-paulo", label: "Advogado trabalhista em Sao Paulo" },
+  { href: "/fgts-nao-depositado", label: "FGTS nao depositado" },
+  { href: "/golpe-via-pix-banco-nao-devolveu", label: "Golpe via PIX" },
+  { href: "/pensao-guarda-divorcio", label: "Pensao, guarda e divorcio" },
+];
 
 export default function Footer({ onNavigate }: FooterProps) {
   const currentYear = new Date().getFullYear();
@@ -11,7 +19,7 @@ export default function Footer({ onNavigate }: FooterProps) {
   return (
     <footer className="border-t border-white/10 bg-slate-950 text-slate-300">
       <div className="container-custom py-14 md:py-16">
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 xl:grid-cols-[1.4fr_1fr_1fr_1fr]">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-2 xl:grid-cols-[1.3fr_1fr_1fr_1fr]">
           <div className="max-w-sm">
             <div className="flex items-center gap-3 mb-5">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-blue-700 shadow-lg shadow-sky-900/40">
@@ -28,7 +36,7 @@ export default function Footer({ onNavigate }: FooterProps) {
             </div>
             <p className="text-sm leading-7 text-slate-400">
               Triagem juridica inicial para quem precisa entender o caso, reunir
-              documentos e decidir entre chat, simulacao ou consulta humana.
+              documentos e decidir entre chat, simulacao, conteudo e consulta humana.
             </p>
           </div>
 
@@ -37,12 +45,22 @@ export default function Footer({ onNavigate }: FooterProps) {
             <ul className="space-y-3 text-sm">
               {primaryNav.map((item) => (
                 <li key={item.id}>
-                  <button
-                    onClick={() => onNavigate(item.id)}
-                    className="footer-link"
-                  >
+                  <RouteLink href={item.href} onNavigate={onNavigate} className="footer-link">
                     {item.label}
-                  </button>
+                  </RouteLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="footer-title">Conteudo</h3>
+            <ul className="space-y-3 text-sm">
+              {footerContentLinks.map((item) => (
+                <li key={item.href}>
+                  <RouteLink href={item.href} onNavigate={onNavigate} className="footer-link">
+                    {item.label}
+                  </RouteLink>
                 </li>
               ))}
             </ul>
@@ -67,44 +85,28 @@ export default function Footer({ onNavigate }: FooterProps) {
                 <Mail className="w-4 h-4 text-sky-400" />
                 <span>{siteConfig.contact.email}</span>
               </li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="footer-title">Legal</h3>
-            <ul className="space-y-3 text-sm">
-              <li>
-                <button
-                  onClick={() => onNavigate("terms")}
-                  className="footer-link"
-                >
-                  Termos de uso
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => onNavigate("privacy")}
-                  className="footer-link"
-                >
-                  Politica de privacidade
-                </button>
-              </li>
-              <li className="text-slate-500">
-                {siteConfig.contact.registry}
-              </li>
+              <li className="text-slate-500">{siteConfig.contact.registry}</li>
             </ul>
           </div>
         </div>
 
+        <div className="mt-10 flex flex-wrap gap-4 text-sm text-slate-400">
+          <RouteLink href={pagePaths.terms} onNavigate={onNavigate} className="footer-link">
+            Termos de uso
+          </RouteLink>
+          <RouteLink href={pagePaths.privacy} onNavigate={onNavigate} className="footer-link">
+            Politica de privacidade
+          </RouteLink>
+          <RouteLink href={pagePaths.blog} onNavigate={onNavigate} className="footer-link">
+            Blog juridico
+          </RouteLink>
+        </div>
+
         <div className="mt-12 flex flex-col gap-4 border-t border-white/10 pt-6 text-xs text-slate-500 md:flex-row md:items-center md:justify-between">
           <p>
-            © {currentYear} {siteConfig.brand.name}. Todos os direitos
-            reservados.
+            &copy; {currentYear} {siteConfig.brand.name}. Todos os direitos reservados.
           </p>
-          <p>
-            Este site fornece orientacao inicial e nao substitui consulta
-            juridica formal.
-          </p>
+          <p>Este site fornece orientacao inicial e nao substitui consulta juridica formal.</p>
           <p className="hidden md:block">{siteConfig.contact.registry}</p>
         </div>
       </div>

@@ -8,10 +8,11 @@ import {
   Shield,
   Sparkles,
 } from "lucide-react";
-import { type Page } from "../config/site";
+import RouteLink from "../components/RouteLink";
+import { pagePaths } from "../config/site";
 
 interface HowItWorksProps {
-  onNavigate: (page: Page) => void;
+  onNavigate: (href: string) => void;
 }
 
 const stages = [
@@ -169,20 +170,18 @@ export default function HowItWorks({ onNavigate }: HowItWorksProps) {
               contato.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
-              <button
-                onClick={() => onNavigate("chat")}
-                className="btn-primary"
-              >
+              <RouteLink href={pagePaths.chat} onNavigate={onNavigate} className="btn-primary">
                 <MessageSquare className="w-5 h-5" />
                 Abrir chat IA
-              </button>
-              <button
-                onClick={() => onNavigate("simulator")}
+              </RouteLink>
+              <RouteLink
+                href={pagePaths.simulator}
+                onNavigate={onNavigate}
                 className="btn-secondary"
               >
                 Simulador trabalhista
                 <ArrowRight className="w-4 h-4" />
-              </button>
+              </RouteLink>
             </div>
           </div>
         </div>

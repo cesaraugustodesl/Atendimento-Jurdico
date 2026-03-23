@@ -14,10 +14,9 @@ import {
   type Violations,
   type SimulatorResult,
 } from "../utils/laborCalculator";
-import { type Page } from "../config/site";
 
 interface SimulatorProps {
-  onNavigate: (page: Page) => void;
+  onNavigate: (href: string) => void;
 }
 
 const INITIAL_VIOLATIONS: Violations = {

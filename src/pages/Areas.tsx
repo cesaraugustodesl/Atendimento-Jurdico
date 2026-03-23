@@ -7,10 +7,11 @@ import {
   ShoppingCart,
   Smartphone,
 } from "lucide-react";
-import { type Page } from "../config/site";
+import RouteLink from "../components/RouteLink";
+import { pagePaths } from "../config/site";
 
 interface AreasProps {
-  onNavigate: (page: Page) => void;
+  onNavigate: (href: string) => void;
 }
 
 const areas = [
@@ -125,13 +126,14 @@ export default function Areas({ onNavigate }: AreasProps) {
                       </div>
                     ))}
                   </div>
-                  <button
-                    onClick={() => onNavigate("chat")}
+                  <RouteLink
+                    href={pagePaths.chat}
+                    onNavigate={onNavigate}
                     className="btn-secondary mt-6 w-full"
                   >
                     Perguntar no chat
                     <ArrowRight className="w-4 h-4" />
-                  </button>
+                  </RouteLink>
                 </div>
               );
             })}
@@ -187,18 +189,16 @@ export default function Areas({ onNavigate }: AreasProps) {
                 passo.
               </p>
               <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-                <button
-                  onClick={() => onNavigate("chat")}
-                  className="btn-primary"
-                >
+                <RouteLink href={pagePaths.chat} onNavigate={onNavigate} className="btn-primary">
                   Abrir chat IA
-                </button>
-                <button
-                  onClick={() => onNavigate("contact")}
+                </RouteLink>
+                <RouteLink
+                  href={pagePaths.contact}
+                  onNavigate={onNavigate}
                   className="btn-secondary"
                 >
                   Falar com a equipe
-                </button>
+                </RouteLink>
               </div>
             </div>
           </div>

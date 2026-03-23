@@ -1,6 +1,6 @@
 # Publicacao
 
-O projeto esta pronto para deploy em host estatico com rotas SPA funcionando.
+O projeto esta pronto para deploy estatico com paginas pre-renderizadas por rota, sitemap, robots e 404 personalizada.
 
 ## Opcao mais simples: Vercel
 
@@ -13,7 +13,7 @@ O projeto esta pronto para deploy em host estatico com rotas SPA funcionando.
    - Output Directory: `dist`
 5. Clique em `Deploy`.
 
-O arquivo `vercel.json` ja foi adicionado para garantir que rotas como `/chat-ia` e `/contato` abram corretamente.
+O build gera HTML proprio para rotas como `/chat-ia`, `/contato`, `/blog` e paginas de conteudo organico. Isso melhora indexacao, compartilhamento e 404.
 
 ## Opcao simples: Netlify
 
@@ -25,7 +25,7 @@ O arquivo `vercel.json` ja foi adicionado para garantir que rotas como `/chat-ia
    - Publish directory: `dist`
 5. Deploy.
 
-O projeto ja inclui `netlify.toml` e `public/_redirects` para fallback de SPA.
+O projeto inclui `netlify.toml` com build estatico. Como as rotas sao geradas como arquivos HTML reais, nao ha dependencia de fallback global de SPA.
 
 ## Cloudflare Pages
 
@@ -39,7 +39,7 @@ O projeto ja inclui `netlify.toml` e `public/_redirects` para fallback de SPA.
    - Build output directory: `dist`
 6. Deploy.
 
-O arquivo `public/_redirects` ajuda no fallback de rotas em plataformas que respeitam esse formato.
+Como as principais rotas sao entregues como HTML estatico, a plataforma pode servir cada pagina diretamente sem depender de rewrite amplo.
 
 ## Endereco publico
 

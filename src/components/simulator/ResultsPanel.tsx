@@ -8,9 +8,10 @@ import {
 } from "lucide-react";
 import ScoreGauge from "./ScoreGauge";
 import SimilarCases, { type CaseData } from "./SimilarCases";
+import RouteLink from "../RouteLink";
 import type { ContractType, SimulatorResult } from "../../utils/laborCalculator";
 import { formatCurrency } from "../../utils/laborCalculator";
-import { buildWhatsAppLink, type Page } from "../../config/site";
+import { buildWhatsAppLink, pagePaths } from "../../config/site";
 
 interface ResultsPanelProps {
   result: SimulatorResult;
@@ -18,7 +19,7 @@ interface ResultsPanelProps {
   similarCases: CaseData[];
   casesLoading: boolean;
   onReset: () => void;
-  onNavigate: (page: Page) => void;
+  onNavigate: (href: string) => void;
 }
 
 const contractLabels: Record<ContractType, string> = {
@@ -182,12 +183,13 @@ export default function ResultsPanel({
             Use o chat para organizar perguntas adicionais, documentos e
             detalhes do caso antes de sair do modo de triagem.
           </p>
-          <button
-            onClick={() => onNavigate("chat")}
+          <RouteLink
+            href={pagePaths.chat}
+            onNavigate={onNavigate}
             className="btn-secondary mt-6 w-full"
           >
             Levar para o chat IA
-          </button>
+          </RouteLink>
         </div>
       </div>
 
@@ -214,12 +216,13 @@ export default function ResultsPanel({
           <RotateCcw className="w-4 h-4" />
           Nova simulacao
         </button>
-        <button
-          onClick={() => onNavigate("contact")}
+        <RouteLink
+          href={pagePaths.contact}
+          onNavigate={onNavigate}
           className="btn-secondary flex-1"
         >
           Falar com a equipe
-        </button>
+        </RouteLink>
       </div>
     </div>
   );

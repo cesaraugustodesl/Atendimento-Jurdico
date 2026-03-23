@@ -8,10 +8,11 @@ import {
   Phone,
   Shield,
 } from "lucide-react";
-import { buildWhatsAppLink, siteConfig, type Page } from "../config/site";
+import RouteLink from "../components/RouteLink";
+import { buildWhatsAppLink, pagePaths, siteConfig } from "../config/site";
 
 interface ContactProps {
-  onNavigate: (page: Page) => void;
+  onNavigate: (href: string) => void;
 }
 
 export default function Contact({ onNavigate }: ContactProps) {
@@ -184,18 +185,20 @@ export default function Contact({ onNavigate }: ContactProps) {
               </div>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <button
-                  onClick={() => onNavigate("chat")}
+                <RouteLink
+                  href={pagePaths.chat}
+                  onNavigate={onNavigate}
                   className="btn-secondary flex-1"
                 >
                   Ir para o chat
-                </button>
-                <button
-                  onClick={() => onNavigate("simulator")}
+                </RouteLink>
+                <RouteLink
+                  href={pagePaths.simulator}
+                  onNavigate={onNavigate}
                   className="btn-secondary flex-1"
                 >
                   Abrir simulador
-                </button>
+                </RouteLink>
               </div>
             </div>
           </div>
@@ -330,21 +333,21 @@ export default function Contact({ onNavigate }: ContactProps) {
                   />
                   <span>
                     Concordo com o tratamento inicial dos dados conforme a{" "}
-                    <button
-                      type="button"
-                      onClick={() => onNavigate("privacy")}
+                    <RouteLink
+                      href={pagePaths.privacy}
+                      onNavigate={onNavigate}
                       className="text-sky-300 hover:text-sky-200"
                     >
                       Politica de Privacidade
-                    </button>{" "}
+                    </RouteLink>{" "}
                     e os{" "}
-                    <button
-                      type="button"
-                      onClick={() => onNavigate("terms")}
+                    <RouteLink
+                      href={pagePaths.terms}
+                      onNavigate={onNavigate}
                       className="text-sky-300 hover:text-sky-200"
                     >
                       Termos de Uso
-                    </button>
+                    </RouteLink>
                     .
                   </span>
                 </label>
@@ -358,13 +361,13 @@ export default function Contact({ onNavigate }: ContactProps) {
                   <MessageSquare className="w-5 h-5" />
                   Continuar no WhatsApp
                 </button>
-                <button
-                  type="button"
-                  onClick={() => onNavigate("chat")}
+                <RouteLink
+                  href={pagePaths.chat}
+                  onNavigate={onNavigate}
                   className="btn-secondary flex-1"
                 >
                   Prefiro passar pela triagem IA
-                </button>
+                </RouteLink>
               </div>
             </form>
 

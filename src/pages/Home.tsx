@@ -13,10 +13,12 @@ import {
   Scale,
   Shield,
 } from "lucide-react";
-import { type Page, siteConfig } from "../config/site";
+import RouteLink from "../components/RouteLink";
+import { pagePaths, siteConfig } from "../config/site";
+import { getFeaturedGuides, getFeaturedPosts } from "../content";
 
 interface HomeProps {
-  onNavigate: (page: Page) => void;
+  onNavigate: (href: string) => void;
 }
 
 const startOptions = [
@@ -26,7 +28,7 @@ const startOptions = [
     description:
       "Para consumidor, contratos, familia, saude e golpes. A IA organiza a situacao e aponta proximos passos.",
     action: "Comecar pelo chat",
-    page: "chat" as Page,
+    href: pagePaths.chat,
     accent: "from-sky-500/20 to-blue-600/10 border-sky-400/20",
   },
   {
@@ -35,7 +37,7 @@ const startOptions = [
     description:
       "Para estimar direitos nao pagos, entender risco e reunir contexto antes de falar com um advogado.",
     action: "Abrir simulador",
-    page: "simulator" as Page,
+    href: pagePaths.simulator,
     accent: "from-emerald-500/20 to-emerald-700/10 border-emerald-400/20",
   },
   {
@@ -44,7 +46,7 @@ const startOptions = [
     description:
       "Para casos urgentes, estrategia, revisao de documentos ou quando voce prefere atendimento direto.",
     action: "Agendar analise",
-    page: "contact" as Page,
+    href: pagePaths.contact,
     accent: "from-amber-500/20 to-amber-700/10 border-amber-400/20",
   },
 ];
@@ -108,6 +110,9 @@ const faqs = [
   },
 ];
 
+const featuredGuides = getFeaturedGuides();
+const featuredPosts = getFeaturedPosts();
+
 export default function Home({ onNavigate }: HomeProps) {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
@@ -130,20 +135,18 @@ export default function Home({ onNavigate }: HomeProps) {
               </p>
 
               <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-                <button
-                  onClick={() => onNavigate("chat")}
-                  className="btn-primary"
-                >
+                <RouteLink href={pagePaths.chat} onNavigate={onNavigate} className="btn-primary">
                   <MessageSquare className="w-5 h-5" />
                   Comecar pelo chat
-                </button>
-                <button
-                  onClick={() => onNavigate("simulator")}
+                </RouteLink>
+                <RouteLink
+                  href={pagePaths.simulator}
+                  onNavigate={onNavigate}
                   className="btn-secondary"
                 >
                   <Calculator className="w-5 h-5" />
                   Abrir simulador trabalhista
-                </button>
+                </RouteLink>
               </div>
 
               <div className="mt-8 flex flex-wrap gap-3 text-sm text-slate-300">
@@ -170,9 +173,10 @@ export default function Home({ onNavigate }: HomeProps) {
                 {startOptions.map((option) => {
                   const Icon = option.icon;
                   return (
-                    <button
+                    <RouteLink
                       key={option.title}
-                      onClick={() => onNavigate(option.page)}
+                      href={option.href}
+                      onNavigate={onNavigate}
                       className={`w-full rounded-3xl border bg-gradient-to-br p-5 text-left transition-transform hover:-translate-y-1 ${option.accent}`}
                     >
                       <div className="flex items-start gap-4">
@@ -192,7 +196,7 @@ export default function Home({ onNavigate }: HomeProps) {
                           </span>
                         </div>
                       </div>
-                    </button>
+                    </RouteLink>
                   );
                 })}
               </div>
@@ -297,13 +301,14 @@ export default function Home({ onNavigate }: HomeProps) {
                   </span>
                 ))}
               </div>
-              <button
-                onClick={() => onNavigate("areas")}
+              <RouteLink
+                href={pagePaths.areas}
+                onNavigate={onNavigate}
                 className="btn-secondary mt-8"
               >
                 Ver areas de atuacao
                 <ArrowRight className="w-4 h-4" />
-              </button>
+              </RouteLink>
             </div>
 
             <div className="surface-card p-7 md:p-8">
@@ -324,12 +329,69 @@ export default function Home({ onNavigate }: HomeProps) {
                   </div>
                 ))}
               </div>
-              <button
-                onClick={() => onNavigate("contact")}
+              <RouteLink
+                href={pagePaths.contact}
+                onNavigate={onNavigate}
                 className="btn-primary mt-8"
               >
                 Agendar analise humana
-              </button>
+              </RouteLink>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section-spacing">
+        <div className="container-custom">
+          <div className="grid gap-8 lg:grid-cols-[0.88fr_1.12fr]">
+            <div>
+              <span className="eyebrow">conteudo para organico</span>
+              <h2 className="section-title mt-5">
+                Guias de busca real e artigos para aquecer a consulta.
+              </h2>
+              <p className="section-lead">
+                O site agora tambem responde buscas informacionais e
+                transacionais com paginas focadas em problemas juridicos reais.
+              </p>
+              <RouteLink
+                href={pagePaths.blog}
+                onNavigate={onNavigate}
+                className="btn-secondary mt-8"
+              >
+                Ver blog juridico
+                <ArrowRight className="w-4 h-4" />
+              </RouteLink>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              {featuredGuides.slice(0, 2).map((guide) => (
+                <RouteLink
+                  key={guide.path}
+                  href={guide.path}
+                  onNavigate={onNavigate}
+                  className="surface-card p-5 hover:-translate-y-1"
+                >
+                  <p className="text-xs uppercase tracking-[0.18em] text-sky-300">
+                    {guide.category}
+                  </p>
+                  <h3 className="mt-4 text-2xl font-bold text-white">{guide.title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-slate-300">{guide.description}</p>
+                </RouteLink>
+              ))}
+              {featuredPosts.slice(0, 2).map((post) => (
+                <RouteLink
+                  key={post.path}
+                  href={post.path}
+                  onNavigate={onNavigate}
+                  className="surface-card p-5 hover:-translate-y-1"
+                >
+                  <p className="text-xs uppercase tracking-[0.18em] text-emerald-300">
+                    {post.category}
+                  </p>
+                  <h3 className="mt-4 text-2xl font-bold text-white">{post.title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-slate-300">{post.description}</p>
+                </RouteLink>
+              ))}
             </div>
           </div>
         </div>
@@ -392,20 +454,18 @@ export default function Home({ onNavigate }: HomeProps) {
               ja precisa de estrategia, fale direto com a equipe.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
-              <button
-                onClick={() => onNavigate("chat")}
-                className="btn-primary"
-              >
+              <RouteLink href={pagePaths.chat} onNavigate={onNavigate} className="btn-primary">
                 <MessageSquare className="w-5 h-5" />
                 Abrir chat IA
-              </button>
-              <button
-                onClick={() => onNavigate("contact")}
+              </RouteLink>
+              <RouteLink
+                href={pagePaths.contact}
+                onNavigate={onNavigate}
                 className="btn-secondary"
               >
                 <Briefcase className="w-5 h-5" />
                 Falar com a equipe
-              </button>
+              </RouteLink>
             </div>
             <p className="mt-6 text-sm text-slate-500">
               Contato atual: {siteConfig.contact.whatsappDisplay} ·{" "}

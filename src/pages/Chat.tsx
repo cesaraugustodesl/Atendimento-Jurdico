@@ -22,7 +22,8 @@ import {
   categoryQuestions,
   getCategoryKey,
 } from "../utils/questionsTemplates";
-import { type Page } from "../config/site";
+import RouteLink from "../components/RouteLink";
+import { pagePaths } from "../config/site";
 
 interface Message {
   id: string;
@@ -32,7 +33,7 @@ interface Message {
 }
 
 interface ChatProps {
-  onNavigate: (page: Page) => void;
+  onNavigate: (href: string) => void;
 }
 
 type FlowStep = "consent" | "category" | "questions" | "conversation";
@@ -572,12 +573,13 @@ export default function Chat({ onNavigate }: ChatProps) {
                       >
                         Enviar follow-up
                       </button>
-                      <button
-                        onClick={() => onNavigate("contact")}
+                      <RouteLink
+                        href={pagePaths.contact}
+                        onNavigate={onNavigate}
                         className="btn-secondary flex-1"
                       >
                         Levar para atendimento humano
-                      </button>
+                      </RouteLink>
                     </div>
                   </div>
                 </div>
