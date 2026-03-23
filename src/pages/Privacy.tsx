@@ -46,7 +46,7 @@ const sections = [
 
 export default function Privacy() {
   return (
-    <div className="pt-16 md:pt-20">
+    <div className="page-frame pt-16 md:pt-20">
       <section className="section-spacing">
         <div className="container-custom">
           <div className="max-w-4xl">

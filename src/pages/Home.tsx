@@ -112,7 +112,7 @@ export default function Home({ onNavigate }: HomeProps) {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   return (
-    <div className="pt-16 md:pt-20">
+    <div className="page-frame pt-16 md:pt-20">
       <section className="section-spacing">
         <div className="container-custom">
           <div className="grid items-center gap-10 lg:grid-cols-[1.2fr_0.8fr]">
