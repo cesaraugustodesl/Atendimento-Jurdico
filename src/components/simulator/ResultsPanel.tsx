@@ -4,20 +4,35 @@ import {
   FileText,
   MessageSquare,
   RotateCcw,
+  Search,
   TrendingUp,
 } from "lucide-react";
 import ScoreGauge from "./ScoreGauge";
-import SimilarCases, { type CaseData } from "./SimilarCases";
+import SimilarCases from "./SimilarCases";
 import RouteLink from "../RouteLink";
 import type { ContractType, SimulatorResult } from "../../utils/laborCalculator";
 import { formatCurrency } from "../../utils/laborCalculator";
-import { buildWhatsAppLink, pagePaths } from "../../config/site";
+import {
+  buildWhatsAppLink,
+  pagePaths,
+} from "../../config/site";
+import type {
+  CaseComparisonInsight,
+  CaseComparisonItem,
+  CaseDurationStats,
+} from "../../lib/caseComparison";
 
 interface ResultsPanelProps {
   result: SimulatorResult;
   contractType: ContractType;
-  similarCases: CaseData[];
+  similarCases: CaseComparisonItem[];
   casesLoading: boolean;
+  comparison: CaseComparisonInsight | null;
+  durationStats: CaseDurationStats | null;
+  caseSummary: string;
+  comparisonError: string;
+  onCaseSummaryChange: (value: string) => void;
+  onCompareCase: () => void;
   onReset: () => void;
   onNavigate: (href: string) => void;
 }
@@ -33,19 +48,25 @@ export default function ResultsPanel({
   contractType,
   similarCases,
   casesLoading,
+  comparison,
+  durationStats,
+  caseSummary,
+  comparisonError,
+  onCaseSummaryChange,
+  onCompareCase,
   onReset,
   onNavigate,
 }: ResultsPanelProps) {
   const whatsappMessage = [
-    "Olá, fiz a simulação trabalhista.",
+    "Ola, fiz a simulacao trabalhista.",
     "",
-    `Tipo de vínculo: ${contractLabels[contractType]}`,
+    `Tipo de vinculo: ${contractLabels[contractType]}`,
     `Score: ${result.score}/100 (${result.classification})`,
     `Faixa estimada: ${formatCurrency(result.estimateMin)} a ${formatCurrency(
       result.estimateMax
     )}`,
     "",
-    "Gostaria de transformar essa triagem em análise humana.",
+    "Gostaria de transformar essa triagem em analise humana.",
   ].join("\n");
 
   return (
@@ -59,7 +80,7 @@ export default function ResultsPanel({
             </h1>
             <p className="mt-4 text-sm leading-7">
               Este score organiza os sinais que voce informou. Ele ajuda a medir
-              força inicial do caso, nao a substituir calculo tecnico ou analise
+              forca inicial do caso, nao a substituir calculo tecnico ou analise
               processual.
             </p>
           </div>
@@ -114,10 +135,10 @@ export default function ResultsPanel({
               </p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="text-sm font-semibold text-white">Proximo passo</p>
+              <p className="text-sm font-semibold text-white">Comparacao publica</p>
               <p className="mt-2 text-sm leading-6">
-                Se a leitura fizer sentido para voce, use o atendimento humano
-                para validar a estrategia e os documentos.
+                No bloco abaixo, voce pode contar com suas palavras o que
+                aconteceu para eu comparar com casos mais parecidos da base.
               </p>
             </div>
           </div>
@@ -152,7 +173,54 @@ export default function ResultsPanel({
         </div>
       )}
 
-      <SimilarCases cases={similarCases} loading={casesLoading} />
+      <div className="surface-panel p-6 md:p-7">
+        <div className="flex items-center gap-3">
+          <Search className="h-6 w-6 text-sky-400" />
+          <h2 className="text-xl font-bold">
+            Resuma o que aconteceu para buscar casos mais parecidos
+          </h2>
+        </div>
+        <p className="mt-4 text-sm leading-7 text-slate-300">
+          Quanto mais objetivo for o resumo, melhor a comparacao. Cite o que
+          houve, quais direitos parecem nao pagos, como foi a demissao e o que
+          mais pode diferenciar seu caso.
+        </p>
+        <textarea
+          rows={5}
+          value={caseSummary}
+          onChange={(event) => onCaseSummaryChange(event.target.value)}
+          placeholder="Exemplo: trabalhei por 4 anos, fazia horas extras quase todos os dias, fui demitido sem receber corretamente FGTS e verbas rescisorias..."
+          className="mt-5 w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-4 text-white placeholder-slate-500 outline-none focus:border-sky-400/50"
+        />
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+          <button
+            onClick={onCompareCase}
+            disabled={casesLoading}
+            className={`rounded-2xl px-6 py-3 font-semibold sm:min-w-[280px] ${
+              casesLoading
+                ? "bg-slate-800 text-slate-500 cursor-not-allowed"
+                : "bg-gradient-to-r from-sky-500 to-blue-700 text-white"
+            }`}
+          >
+            {casesLoading ? "Comparando..." : "Buscar e comparar casos"}
+          </button>
+          <p className="text-xs leading-6 text-slate-500">
+            A comparacao cruza seu resumo com tags, texto dos casos publicos e
+            uma leitura de IA para destacar semelhancas, diferencas e tempo
+            observado quando a base traz essa informacao.
+          </p>
+        </div>
+        {comparisonError ? (
+          <p className="mt-4 text-sm text-red-300">{comparisonError}</p>
+        ) : null}
+      </div>
+
+      <SimilarCases
+        cases={similarCases}
+        loading={casesLoading}
+        comparison={comparison}
+        durationStats={durationStats}
+      />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="surface-panel p-6">
@@ -199,10 +267,10 @@ export default function ResultsPanel({
             <AlertTriangle className="mt-1 h-5 w-5 flex-shrink-0 text-red-300" />
             <div>
               <p className="text-sm font-semibold text-red-200">
-                Atenção ao prazo trabalhista
+                Atencao ao prazo trabalhista
               </p>
               <p className="mt-2 text-sm leading-7 text-slate-200">
-                Em regra, o prazo para ajuizar a ação e de ate 2 anos apos o fim
+                Em regra, o prazo para ajuizar a acao e de ate 2 anos apos o fim
                 do contrato. Se voce estiver perto desse limite, priorize
                 atendimento humano.
               </p>
@@ -213,7 +281,7 @@ export default function ResultsPanel({
 
       <div className="flex flex-col gap-3 sm:flex-row">
         <button onClick={onReset} className="btn-secondary flex-1">
-          <RotateCcw className="w-4 h-4" />
+          <RotateCcw className="h-4 w-4" />
           Nova simulacao
         </button>
         <RouteLink

@@ -6,8 +6,13 @@ import StepEmployment from "../components/simulator/StepEmployment";
 import StepViolations from "../components/simulator/StepViolations";
 import StepContact from "../components/simulator/StepContact";
 import ResultsPanel from "../components/simulator/ResultsPanel";
-import type { CaseData } from "../components/simulator/SimilarCases";
 import { supabase } from "../lib/supabase";
+import {
+  fetchCaseComparison,
+  type CaseComparisonInsight,
+  type CaseComparisonItem,
+  type CaseDurationStats,
+} from "../lib/caseComparison";
 import {
   computeResult,
   type ContractType,
@@ -44,31 +49,74 @@ export default function Simulator({ onNavigate }: SimulatorProps) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<SimulatorResult | null>(null);
   const [showResult, setShowResult] = useState(false);
-  const [similarCases, setSimilarCases] = useState<CaseData[]>([]);
+  const [similarCases, setSimilarCases] = useState<CaseComparisonItem[]>([]);
   const [casesLoading, setCasesLoading] = useState(false);
+  const [caseSummary, setCaseSummary] = useState("");
+  const [comparison, setComparison] = useState<CaseComparisonInsight | null>(null);
+  const [durationStats, setDurationStats] = useState<CaseDurationStats | null>(null);
+  const [comparisonError, setComparisonError] = useState("");
 
-  const fetchSimilarCases = async (activeViolations: string[]) => {
+  const getActiveViolationTags = () =>
+    Object.entries(violations)
+      .filter(([, value]) => value)
+      .map(([key]) => key);
+
+  const fetchSimilarCases = async (
+    activeViolations: string[],
+    summary: string,
+    currentResult: SimulatorResult
+  ) => {
     setCasesLoading(true);
+    setComparisonError("");
+
     try {
-      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/buscar-jurisprudencia`;
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          "Content-Type": "application/json",
+      const data = await fetchCaseComparison({
+        tags: activeViolations,
+        summary,
+        limit: 5,
+        context: {
+          source: "simulator",
+          contractType,
+          score: currentResult.score,
+          classification: currentResult.classification,
+          estimateMin: currentResult.estimateMin,
+          estimateMax: currentResult.estimateMax,
+          identifiedRights: currentResult.identifiedRights,
         },
-        body: JSON.stringify({ tags: activeViolations, limit: 5 }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setSimilarCases(data.cases || []);
-      }
-    } catch {
+      setSimilarCases(data.cases || []);
+      setComparison(data.comparison ?? null);
+      setDurationStats(data.durationStats ?? null);
+    } catch (error) {
+      console.error("Erro ao buscar casos semelhantes:", error);
       setSimilarCases([]);
+      setComparison(null);
+      setDurationStats(null);
+      setComparisonError(
+        "Nao consegui comparar seu caso com a base publica agora. Tente novamente em instantes."
+      );
     } finally {
       setCasesLoading(false);
     }
+  };
+
+  const handleCompareCase = async () => {
+    if (!result) {
+      return;
+    }
+
+    const activeViolationTags = getActiveViolationTags();
+    const summary = caseSummary.trim();
+
+    if (!summary && activeViolationTags.length === 0) {
+      setComparisonError(
+        "Escreva um resumo do que aconteceu para eu conseguir comparar melhor com casos publicos."
+      );
+      return;
+    }
+
+    await fetchSimilarCases(activeViolationTags, summary, result);
   };
 
   const handleSubmit = async () => {
@@ -91,9 +139,7 @@ export default function Simulator({ onNavigate }: SimulatorProps) {
     const computed = computeResult(formData);
     setResult(computed);
 
-    const activeViolationTags = Object.entries(violations)
-      .filter(([, value]) => value)
-      .map(([key]) => key);
+    const activeViolationTags = getActiveViolationTags();
 
     try {
       await supabase.from("labor_leads").insert({
@@ -118,7 +164,7 @@ export default function Simulator({ onNavigate }: SimulatorProps) {
     window.scrollTo({ top: 0, behavior: "smooth" });
 
     if (activeViolationTags.length > 0) {
-      fetchSimilarCases(activeViolationTags);
+      fetchSimilarCases(activeViolationTags, "", computed);
     }
   };
 
@@ -135,6 +181,10 @@ export default function Simulator({ onNavigate }: SimulatorProps) {
     setShowResult(false);
     setSimilarCases([]);
     setCasesLoading(false);
+    setCaseSummary("");
+    setComparison(null);
+    setDurationStats(null);
+    setComparisonError("");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -179,8 +229,11 @@ export default function Simulator({ onNavigate }: SimulatorProps) {
                     ].map((item) => {
                       const Icon = item.icon;
                       return (
-                        <div key={item.title} className="rounded-3xl border border-white/10 bg-white/5 p-4">
-                          <Icon className="w-5 h-5 text-emerald-400" />
+                        <div
+                          key={item.title}
+                          className="rounded-3xl border border-white/10 bg-white/5 p-4"
+                        >
+                          <Icon className="h-5 w-5 text-emerald-400" />
                           <p className="mt-4 text-sm font-semibold text-white">
                             {item.title}
                           </p>
@@ -264,6 +317,12 @@ export default function Simulator({ onNavigate }: SimulatorProps) {
                 contractType={contractType as ContractType}
                 similarCases={similarCases}
                 casesLoading={casesLoading}
+                comparison={comparison}
+                durationStats={durationStats}
+                caseSummary={caseSummary}
+                comparisonError={comparisonError}
+                onCaseSummaryChange={setCaseSummary}
+                onCompareCase={handleCompareCase}
                 onReset={handleReset}
                 onNavigate={onNavigate}
               />

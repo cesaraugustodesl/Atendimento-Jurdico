@@ -9,6 +9,7 @@ import {
   FileText,
   Heart,
   MessageSquare,
+  Search,
   Send,
   Shield,
   ShoppingCart,
@@ -24,6 +25,13 @@ import {
 } from "../utils/questionsTemplates";
 import RouteLink from "../components/RouteLink";
 import { pagePaths } from "../config/site";
+import SimilarCases from "../components/simulator/SimilarCases";
+import {
+  fetchCaseComparison,
+  type CaseComparisonInsight,
+  type CaseComparisonItem,
+  type CaseDurationStats,
+} from "../lib/caseComparison";
 
 interface Message {
   id: string;
@@ -46,6 +54,20 @@ const quickSuggestions = [
   { icon: Smartphone, text: "Golpe ou fraude", accent: "border-violet-400/20 bg-violet-500/10" },
   { icon: FileText, text: "Problema com contrato", accent: "border-slate-300/20 bg-white/5" },
 ];
+
+const categoryTagMap: Record<string, string[]> = {
+  cobranca: [],
+  demissao: [
+    "demissaoProblematica",
+    "fgtsNaoPago",
+    "horasExtrasNaoPagas",
+    "tempoMaisTresAnos",
+  ],
+  pensao: [],
+  plano_saude: [],
+  golpe: [],
+  contrato: [],
+};
 
 function normalizeText(value: string) {
   return value
@@ -86,6 +108,12 @@ export default function Chat({ onNavigate }: ChatProps) {
   const [consentGiven, setConsentGiven] = useState(false);
   const [composerValue, setComposerValue] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [caseSummary, setCaseSummary] = useState("");
+  const [comparisonLoading, setComparisonLoading] = useState(false);
+  const [comparisonError, setComparisonError] = useState("");
+  const [similarCases, setSimilarCases] = useState<CaseComparisonItem[]>([]);
+  const [comparison, setComparison] = useState<CaseComparisonInsight | null>(null);
+  const [durationStats, setDurationStats] = useState<CaseDurationStats | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -174,6 +202,17 @@ export default function Chat({ onNavigate }: ChatProps) {
     }
 
     const messageText = buildMessage(selectedCategory, answers);
+    const summarySeed =
+      (answers.detalhes ?? "").trim() ||
+      category.questions
+        .map((question) => {
+          const answer = answers[question.id]?.trim();
+          return answer ? `${question.text}: ${answer}` : "";
+        })
+        .filter(Boolean)
+        .join("\n");
+
+    setCaseSummary(summarySeed);
     const initialMessage: Message = {
       id: crypto.randomUUID(),
       role: "user",
@@ -218,7 +257,60 @@ export default function Chat({ onNavigate }: ChatProps) {
     setMessages([]);
     setComposerValue("");
     setIsSending(false);
+    setCaseSummary("");
+    setComparisonLoading(false);
+    setComparisonError("");
+    setSimilarCases([]);
+    setComparison(null);
+    setDurationStats(null);
     setFlowStep(consentGiven ? "category" : "consent");
+  };
+
+  const handleCompareCases = async () => {
+    const summary = caseSummary.trim();
+    const tags = categoryTagMap[selectedCategory] ?? [];
+
+    if (!summary) {
+      setComparisonError(
+        "Escreva um resumo curto do que aconteceu para eu comparar com a base publica."
+      );
+      return;
+    }
+
+    setComparisonLoading(true);
+    setComparisonError("");
+
+    try {
+      const data = await fetchCaseComparison({
+        tags,
+        summary,
+        limit: 5,
+        context: {
+          source: "chat",
+          category: selectedCategory,
+          categoryLabel: categoryQuestions[selectedCategory]?.category ?? "",
+          userMessages: messages
+            .filter((message) => message.role === "user")
+            .map((message) => message.content)
+            .join("\n\n")
+            .slice(0, 2200),
+        },
+      });
+
+      setSimilarCases(data.cases || []);
+      setComparison(data.comparison ?? null);
+      setDurationStats(data.durationStats ?? null);
+    } catch (error) {
+      console.error("Erro ao comparar casos:", error);
+      setSimilarCases([]);
+      setComparison(null);
+      setDurationStats(null);
+      setComparisonError(
+        "Nao consegui comparar esse caso com a base publica agora. Tente novamente em instantes."
+      );
+    } finally {
+      setComparisonLoading(false);
+    }
   };
 
   const formatAssistantMessage = (content: string) => {
@@ -582,6 +674,65 @@ export default function Chat({ onNavigate }: ChatProps) {
                       </RouteLink>
                     </div>
                   </div>
+
+                  <div className="surface-card p-5 md:p-6">
+                    <div className="flex items-start gap-3">
+                      <Search className="mt-1 h-5 w-5 flex-shrink-0 text-sky-400" />
+                      <div>
+                        <h3 className="text-xl font-bold text-white">
+                          Resuma o caso para comparar com casos publicos
+                        </h3>
+                        <p className="mt-3 text-sm leading-7 text-slate-300">
+                          Esta etapa funciona melhor quando voce descreve o que
+                          aconteceu com suas palavras. A base atual de casos
+                          semelhantes esta mais madura para temas trabalhistas,
+                          mas voce pode testar mesmo assim.
+                        </p>
+                      </div>
+                    </div>
+
+                    <textarea
+                      rows={5}
+                      value={caseSummary}
+                      onChange={(event) => setCaseSummary(event.target.value)}
+                      placeholder="Exemplo: fui demitido sem receber tudo, trabalhei sem registro por um periodo e tenho mensagens e comprovantes..."
+                      className="mt-5 w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-4 text-white placeholder-slate-500 outline-none focus:border-sky-400/50"
+                    />
+
+                    <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                      <button
+                        onClick={handleCompareCases}
+                        disabled={comparisonLoading}
+                        className={`rounded-2xl px-6 py-3 font-semibold sm:min-w-[260px] ${
+                          comparisonLoading
+                            ? "bg-slate-800 text-slate-500 cursor-not-allowed"
+                            : "bg-gradient-to-r from-sky-500 to-blue-700 text-white"
+                        }`}
+                      >
+                        {comparisonLoading
+                          ? "Comparando..."
+                          : "Buscar casos comparaveis"}
+                      </button>
+                      <p className="text-xs leading-6 text-slate-500">
+                        O comparador usa resumo livre, sinais do tema escolhido
+                        e leitura de IA para destacar semelhancas, diferencas e
+                        pontos de duracao quando a base publica traz esse dado.
+                      </p>
+                    </div>
+
+                    {comparisonError ? (
+                      <p className="mt-4 text-sm text-red-300">{comparisonError}</p>
+                    ) : null}
+                  </div>
+
+                  <SimilarCases
+                    cases={similarCases}
+                    loading={comparisonLoading}
+                    comparison={comparison}
+                    durationStats={durationStats}
+                    title="Casos publicos comparaveis"
+                    subtitle="Comparacao baseada no resumo livre e na base publica disponivel no projeto."
+                  />
                 </div>
               )}
             </div>
