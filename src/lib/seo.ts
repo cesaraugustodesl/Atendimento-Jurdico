@@ -2,6 +2,7 @@ import { blogIndexMeta, type BlogPost, type ContentBase, type ServicePage } from
 import { corePageSeo, getAbsoluteUrl, pageLabels, pagePaths, siteConfig } from "../config/site";
 import type { Page } from "../config/site";
 import type { ResolvedRoute } from "./routing";
+import type { SimulatorDefinition } from "./simulators/types";
 
 interface BreadcrumbItem {
   name: string;
@@ -139,6 +140,25 @@ function getBlogSchema(entry: BlogPost) {
   };
 }
 
+function getSimulatorBreadcrumbs(entry: SimulatorDefinition): BreadcrumbItem[] {
+  return [
+    { name: pageLabels.home, path: pagePaths.home },
+    { name: pageLabels.simulators, path: pagePaths.simulators },
+    { name: entry.name, path: entry.path },
+  ];
+}
+
+function getSimulatorSchema(entry: SimulatorDefinition) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: entry.name,
+    description: entry.seoDescription,
+    url: getAbsoluteUrl(entry.path),
+    about: entry.area,
+  };
+}
+
 function getStaticPageDocument(page: Page): SeoDocument {
   const meta = corePageSeo[page];
   const canonicalPath = pagePaths[page];
@@ -206,6 +226,27 @@ function getServiceDocument(entry: ServicePage): SeoDocument {
   };
 }
 
+function getSimulatorDocument(entry: SimulatorDefinition): SeoDocument {
+  const breadcrumbs = getSimulatorBreadcrumbs(entry);
+
+  return {
+    title: buildTitle(entry.seoTitle),
+    description: entry.seoDescription,
+    canonicalPath: entry.path,
+    canonicalUrl: getAbsoluteUrl(entry.path),
+    ogType: "website",
+    imageUrl: getAbsoluteUrl(siteConfig.seo.defaultOgImage),
+    robots: "index,follow",
+    breadcrumbs,
+    structuredData: [
+      getWebsiteSchema(),
+      getOrganizationSchema(),
+      getBreadcrumbSchema(breadcrumbs),
+      getSimulatorSchema(entry),
+    ],
+  };
+}
+
 function getBlogPostDocument(entry: BlogPost): SeoDocument {
   const breadcrumbs = getContentBreadcrumbs(entry, entry.title);
   return {
@@ -249,6 +290,8 @@ export function getSeoDocument(route: ResolvedRoute): SeoDocument {
   switch (route.kind) {
     case "core":
       return getStaticPageDocument(route.page);
+    case "simulator-detail":
+      return getSimulatorDocument(route.entry);
     case "blog-index":
       return getBlogIndexDocument();
     case "service":

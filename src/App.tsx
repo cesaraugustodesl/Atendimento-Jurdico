@@ -10,11 +10,13 @@ import Chat from "./pages/Chat";
 import Contact from "./pages/Contact";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
-import Simulator from "./pages/Simulator";
 import Blog from "./pages/Blog";
 import ContentPage from "./pages/ContentPage";
 import NotFound from "./pages/NotFound";
+import Simulators from "./pages/Simulators";
+import SimulatorExperience from "./pages/SimulatorExperience";
 import { normalizePath } from "./config/site";
+import { getSimulatorBySlug } from "./lib/simulators/registry";
 
 interface AppProps {
   initialPath?: string;
@@ -90,11 +92,27 @@ function App({ initialPath }: AppProps) {
           case "privacy":
             return <Privacy />;
           case "simulator":
-            return <Simulator onNavigate={handleNavigate} />;
+            return (
+              <SimulatorExperience
+                key="trabalhista-geral"
+                simulator={getSimulatorBySlug("trabalhista-geral")!}
+                onNavigate={handleNavigate}
+              />
+            );
+          case "simulators":
+            return <Simulators onNavigate={handleNavigate} />;
           case "blog":
             return <Blog onNavigate={handleNavigate} />;
         }
         break;
+      case "simulator-detail":
+        return (
+          <SimulatorExperience
+            key={route.entry.slug}
+            simulator={route.entry}
+            onNavigate={handleNavigate}
+          />
+        );
       case "blog-index":
         return <Blog onNavigate={handleNavigate} />;
       case "service":

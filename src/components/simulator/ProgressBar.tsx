@@ -3,6 +3,7 @@ import { Clock } from "lucide-react";
 interface ProgressBarProps {
   currentStep: number;
   totalSteps: number;
+  stepLabels?: string[];
 }
 
 const STEP_LABELS = ["Contrato", "Emprego", "Sinais", "Contato"];
@@ -10,6 +11,7 @@ const STEP_LABELS = ["Contrato", "Emprego", "Sinais", "Contato"];
 export default function ProgressBar({
   currentStep,
   totalSteps,
+  stepLabels = STEP_LABELS,
 }: ProgressBarProps) {
   const progress = ((currentStep + 1) / totalSteps) * 100;
 
@@ -30,8 +32,11 @@ export default function ProgressBar({
           style={{ width: `${progress}%` }}
         />
       </div>
-      <div className="mt-3 grid grid-cols-4 gap-3">
-        {STEP_LABELS.map((label, index) => (
+      <div
+        className="mt-3 grid gap-3"
+        style={{ gridTemplateColumns: `repeat(${stepLabels.length}, minmax(0, 1fr))` }}
+      >
+        {stepLabels.map((label, index) => (
           <span
             key={label}
             className={`text-xs font-medium ${

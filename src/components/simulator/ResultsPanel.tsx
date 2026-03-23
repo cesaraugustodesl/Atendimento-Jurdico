@@ -9,8 +9,6 @@ import {
 import ScoreGauge from "./ScoreGauge";
 import SimilarCases from "./SimilarCases";
 import RouteLink from "../RouteLink";
-import type { ContractType, SimulatorResult } from "../../utils/laborCalculator";
-import { formatCurrency } from "../../utils/laborCalculator";
 import {
   buildWhatsAppLink,
   pagePaths,
@@ -20,10 +18,14 @@ import type {
   CaseComparisonItem,
   CaseDurationStats,
 } from "../../lib/caseComparison";
+import type {
+  SimulatorDefinition,
+  SimulatorOutcome,
+} from "../../lib/simulators/types";
 
 interface ResultsPanelProps {
-  result: SimulatorResult;
-  contractType: ContractType;
+  simulator: SimulatorDefinition;
+  result: SimulatorOutcome;
   similarCases: CaseComparisonItem[];
   casesLoading: boolean;
   comparison: CaseComparisonInsight | null;
@@ -33,15 +35,46 @@ interface ResultsPanelProps {
   onNavigate: (href: string) => void;
 }
 
-const contractLabels: Record<ContractType, string> = {
-  clt: "CLT",
-  pj: "PJ",
-  informal: "Sem registro",
-};
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+function renderEstimate(result: SimulatorOutcome) {
+  if (!result.estimate) {
+    return null;
+  }
+
+  if (result.estimate.valueText) {
+    return <span className="text-3xl font-black text-emerald-400">{result.estimate.valueText}</span>;
+  }
+
+  if (
+    typeof result.estimate.min === "number" &&
+    typeof result.estimate.max === "number"
+  ) {
+    return (
+      <div className="flex flex-wrap items-end gap-3">
+        <span className="text-3xl font-black text-emerald-400">
+          {formatCurrency(result.estimate.min)}
+        </span>
+        <span className="text-slate-500">a</span>
+        <span className="text-3xl font-black text-emerald-400">
+          {formatCurrency(result.estimate.max)}
+        </span>
+      </div>
+    );
+  }
+
+  return null;
+}
 
 export default function ResultsPanel({
+  simulator,
   result,
-  contractType,
   similarCases,
   casesLoading,
   comparison,
@@ -51,15 +84,12 @@ export default function ResultsPanel({
   onNavigate,
 }: ResultsPanelProps) {
   const whatsappMessage = [
-    "Ola, fiz a simulacao trabalhista.",
+    `Ola, acabei de concluir o ${simulator.name}.`,
     "",
-    `Tipo de vinculo: ${contractLabels[contractType]}`,
     `Score: ${result.score}/100 (${result.classification})`,
-    `Faixa estimada: ${formatCurrency(result.estimateMin)} a ${formatCurrency(
-      result.estimateMax
-    )}`,
+    `Resumo: ${result.whatsappSummary}`,
     "",
-    "Gostaria de transformar essa triagem em analise humana.",
+    "Gostaria de falar com a equipe sobre meu caso.",
   ].join("\n");
 
   return (
@@ -67,15 +97,11 @@ export default function ResultsPanel({
       <div className="surface-panel p-7 md:p-8">
         <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div>
-            <span className="eyebrow">resultado da simulacao</span>
+            <span className="eyebrow">resultado da triagem</span>
             <h1 className="mt-5 text-3xl md:text-4xl">
-              Sua triagem trabalhista ficou pronta.
+              Seu resultado do {simulator.name.toLowerCase()} ficou pronto.
             </h1>
-            <p className="mt-4 text-sm leading-7">
-              Este score organiza os sinais que voce informou. Ele ajuda a medir
-              forca inicial do caso, nao a substituir calculo tecnico ou analise
-              processual.
-            </p>
+            <p className="mt-4 text-sm leading-7">{result.summary}</p>
           </div>
           <div className="rounded-3xl border border-white/10 bg-slate-950/70 p-6">
             <ScoreGauge score={result.score} classification={result.classification} />
@@ -87,25 +113,20 @@ export default function ResultsPanel({
         <div className="surface-card p-6">
           <div className="flex items-center gap-3">
             <TrendingUp className="h-6 w-6 text-emerald-400" />
-            <h2 className="text-xl font-bold">Faixa estimada</h2>
+            <h2 className="text-xl font-bold">
+              {result.estimate?.label ?? "Potencial inicial"}
+            </h2>
           </div>
           <p className="mt-4 text-sm leading-7">
-            Com base no salario, no tempo informado e nos sinais marcados, a
-            leitura inicial aponta esta faixa:
+            {result.potentialLabel}. Esta leitura serve para organizar expectativa e
+            proximo passo, nao para substituir analise juridica individualizada.
           </p>
-          <div className="mt-6 flex flex-wrap items-end gap-3">
-            <span className="text-3xl font-black text-emerald-400">
-              {formatCurrency(result.estimateMin)}
-            </span>
-            <span className="text-slate-500">a</span>
-            <span className="text-3xl font-black text-emerald-400">
-              {formatCurrency(result.estimateMax)}
-            </span>
-          </div>
-          <p className="mt-3 text-xs leading-6 text-slate-500">
-            A faixa nao representa promessa de ganho. Serve para orientar a
-            conversa com um advogado.
-          </p>
+          <div className="mt-6">{renderEstimate(result)}</div>
+          {result.estimate?.helper ? (
+            <p className="mt-3 text-xs leading-6 text-slate-500">
+              {result.estimate.helper}
+            </p>
+          ) : null}
         </div>
 
         <div className="surface-card p-6">
@@ -115,56 +136,75 @@ export default function ResultsPanel({
           </div>
           <div className="mt-5 space-y-4">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="text-sm font-semibold text-white">Probabilidade</p>
+              <p className="text-sm font-semibold text-white">Score do lead</p>
               <p className="mt-2 text-sm leading-6">
-                O score mede densidade de sinais informados, nao certeza juridica.
+                O score mede prioridade e densidade de sinais, nao certeza de ganho.
               </p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="text-sm font-semibold text-white">Faixa financeira</p>
+              <p className="text-sm font-semibold text-white">Conclusao pratica</p>
               <p className="mt-2 text-sm leading-6">
-                A estimativa depende de prova, periodo exato e enquadramento da
-                tese na analise humana.
+                O objetivo aqui e organizar o caso, separar prova e decidir se vale
+                levar para atendimento humano agora.
               </p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <p className="text-sm font-semibold text-white">Comparacao publica</p>
+              <p className="text-sm font-semibold text-white">Aviso legal</p>
               <p className="mt-2 text-sm leading-6">
-                No bloco abaixo, voce pode contar com suas palavras o que
-                aconteceu para eu comparar com casos mais parecidos da base.
+                Esta e uma analise preliminar informativa e nao substitui a
+                avaliacao juridica individualizada.
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {result.contractInsight && (
-        <div className="surface-panel p-6">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="mt-1 h-5 w-5 flex-shrink-0 text-amber-300" />
-            <p className="text-sm leading-7">{result.contractInsight}</p>
-          </div>
-        </div>
-      )}
-
-      {result.identifiedRights.length > 0 && (
+      {result.findings.length > 0 ? (
         <div className="surface-card p-6">
           <div className="flex items-center gap-3">
             <CheckCircle2 className="h-6 w-6 text-emerald-400" />
-            <h2 className="text-xl font-bold">Sinais identificados</h2>
+            <h2 className="text-xl font-bold">Pontos identificados</h2>
           </div>
           <div className="mt-5 grid gap-3 md:grid-cols-2">
-            {result.identifiedRights.map((right) => (
+            {result.findings.map((finding) => (
               <div
-                key={right}
+                key={finding}
                 className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300"
               >
-                {right}
+                {finding}
               </div>
             ))}
           </div>
         </div>
-      )}
+      ) : null}
+
+      {result.recommendations.length > 0 ? (
+        <div className="surface-panel p-6">
+          <div className="flex items-center gap-3">
+            <FileText className="h-6 w-6 text-sky-400" />
+            <h2 className="text-xl font-bold">Proximos passos sugeridos</h2>
+          </div>
+          <div className="mt-5 space-y-3">
+            {result.recommendations.map((item) => (
+              <div
+                key={item}
+                className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm leading-7 text-slate-300"
+              >
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {result.caution ? (
+        <div className="surface-panel p-6">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-1 h-5 w-5 flex-shrink-0 text-amber-300" />
+            <p className="text-sm leading-7">{result.caution}</p>
+          </div>
+        </div>
+      ) : null}
 
       {comparisonError ? (
         <div className="surface-panel p-6">
@@ -182,13 +222,16 @@ export default function ResultsPanel({
         </div>
       ) : null}
 
-      <SimilarCases
-        cases={similarCases}
-        loading={casesLoading}
-        comparison={comparison}
-        durationStats={durationStats}
-        subtitle="Comparacao montada com base no resumo informado no formulario e nos sinais trabalhistas marcados na triagem."
-      />
+      {simulator.supportsPublicCaseComparison ? (
+        <SimilarCases
+          cases={similarCases}
+          loading={casesLoading}
+          comparison={comparison}
+          durationStats={durationStats}
+          title={simulator.comparisonTitle}
+          subtitle={simulator.comparisonSubtitle}
+        />
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="surface-panel p-6">
@@ -197,7 +240,7 @@ export default function ResultsPanel({
             <h2 className="text-xl font-bold">Levar para analise humana</h2>
           </div>
           <p className="mt-4 text-sm leading-7">
-            Se voce quiser transformar a triagem em estrategia, o caminho mais
+            Se voce quiser transformar essa triagem em estrategia, o caminho mais
             objetivo agora e falar com a equipe com esse resumo em maos.
           </p>
           <a
@@ -213,52 +256,33 @@ export default function ResultsPanel({
         <div className="surface-card p-6">
           <div className="flex items-center gap-3">
             <FileText className="h-6 w-6 text-sky-400" />
-            <h2 className="text-xl font-bold">Se quiser continuar sozinho</h2>
+            <h2 className="text-xl font-bold">Explorar outros caminhos</h2>
           </div>
           <p className="mt-4 text-sm leading-7">
-            Use o chat para organizar perguntas adicionais, documentos e
-            detalhes do caso antes de sair do modo de triagem.
+            Voce pode refazer esta triagem, ver outros simuladores especificos ou
+            levar o caso para o chat IA.
           </p>
-          <RouteLink
-            href={pagePaths.chat}
-            onNavigate={onNavigate}
-            className="btn-secondary mt-6 w-full"
-          >
-            Levar para o chat IA
-          </RouteLink>
-        </div>
-      </div>
-
-      {result.classification === "alta" && (
-        <div className="rounded-3xl border border-red-500/30 bg-red-500/10 p-5">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="mt-1 h-5 w-5 flex-shrink-0 text-red-300" />
-            <div>
-              <p className="text-sm font-semibold text-red-200">
-                Atencao ao prazo trabalhista
-              </p>
-              <p className="mt-2 text-sm leading-7 text-slate-200">
-                Em regra, o prazo para ajuizar a acao e de ate 2 anos apos o fim
-                do contrato. Se voce estiver perto desse limite, priorize
-                atendimento humano.
-              </p>
-            </div>
+          <div className="mt-6 grid gap-3">
+            <button onClick={onReset} className="btn-secondary w-full justify-center">
+              <RotateCcw className="h-4 w-4" />
+              Refazer simulacao
+            </button>
+            <RouteLink
+              href={pagePaths.simulators}
+              onNavigate={onNavigate}
+              className="btn-secondary w-full justify-center"
+            >
+              Ver outros simuladores
+            </RouteLink>
+            <RouteLink
+              href={pagePaths.chat}
+              onNavigate={onNavigate}
+              className="btn-secondary w-full justify-center"
+            >
+              Levar para o chat IA
+            </RouteLink>
           </div>
         </div>
-      )}
-
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <button onClick={onReset} className="btn-secondary flex-1">
-          <RotateCcw className="h-4 w-4" />
-          Nova simulacao
-        </button>
-        <RouteLink
-          href={pagePaths.contact}
-          onNavigate={onNavigate}
-          className="btn-secondary flex-1"
-        >
-          Falar com a equipe
-        </RouteLink>
       </div>
     </div>
   );

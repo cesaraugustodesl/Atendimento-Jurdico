@@ -7,6 +7,7 @@ export type Page =
   | "terms"
   | "privacy"
   | "simulator"
+  | "simulators"
   | "blog";
 
 export interface CorePageSeo {
@@ -51,6 +52,7 @@ export const pageLabels: Record<Page, string> = {
   terms: "Termos de uso",
   privacy: "Politica de privacidade",
   simulator: "Simulador trabalhista",
+  simulators: "Simuladores juridicos",
   blog: "Blog",
 };
 
@@ -63,6 +65,7 @@ export const pagePaths: Record<Page, string> = {
   terms: "/termos-de-uso",
   privacy: "/politica-de-privacidade",
   simulator: "/simulador-trabalhista",
+  simulators: "/simuladores",
   blog: "/blog",
 };
 
@@ -106,6 +109,11 @@ export const corePageSeo: Record<Page, CorePageSeo> = {
     title: "Simulador trabalhista para estimar sinais de direitos nao pagos",
     description:
       "Simule sinais de credito trabalhista, organize informacoes sobre FGTS, horas extras, contrato e demissao e leve o caso para analise humana.",
+  },
+  simulators: {
+    title: "Simuladores juridicos para triagem inicial de casos",
+    description:
+      "Acesse simuladores juridicos focados em dores especificas, como rescisao, horas extras, FGTS e golpe via PIX, para organizar o caso antes do atendimento humano.",
   },
   blog: {
     title: "Blog juridico com guias praticos para atrair e orientar usuarios",

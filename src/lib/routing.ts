@@ -5,11 +5,14 @@ import {
   getContentByPath,
   getServicePageByPath,
 } from "../content";
+import { getAllSimulatorPaths, getSimulatorByPath } from "./simulators/registry";
 import type { BlogPost, ServicePage } from "../content";
 import { pageLabels, pagePaths, type Page, normalizePath } from "../config/site";
+import type { SimulatorDefinition } from "./simulators/types";
 
 export type ResolvedRoute =
   | { kind: "core"; page: Page; path: string; navPage: Page }
+  | { kind: "simulator-detail"; entry: SimulatorDefinition; path: string; navPage: Page }
   | { kind: "service"; entry: ServicePage; path: string; navPage: Page }
   | { kind: "blog-index"; path: string; navPage: Page }
   | { kind: "blog-post"; entry: BlogPost; path: string; navPage: Page }
@@ -35,6 +38,16 @@ export function resolveRoute(pathname: string): ResolvedRoute {
       page: corePage,
       path,
       navPage: corePage,
+    };
+  }
+
+  const simulatorEntry = getSimulatorByPath(path);
+  if (simulatorEntry) {
+    return {
+      kind: "simulator-detail",
+      entry: simulatorEntry,
+      path,
+      navPage: "simulator",
     };
   }
 
@@ -70,7 +83,12 @@ export function isInternalHref(href: string) {
 
 export function getAllPublicPaths() {
   return Array.from(
-    new Set([...Object.values(pagePaths), blogIndexMeta.path, ...getAllContentPaths()])
+    new Set([
+      ...Object.values(pagePaths),
+      blogIndexMeta.path,
+      ...getAllContentPaths(),
+      ...getAllSimulatorPaths(),
+    ])
   );
 }
 
@@ -78,6 +96,8 @@ export function getRouteLabel(route: ResolvedRoute) {
   switch (route.kind) {
     case "core":
       return pageLabels[route.page];
+    case "simulator-detail":
+      return route.entry.name;
     case "blog-index":
       return "Blog";
     case "service":

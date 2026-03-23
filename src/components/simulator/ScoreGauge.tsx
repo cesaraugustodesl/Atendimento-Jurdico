@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import type { Classification } from '../../utils/laborCalculator';
+import type { LeadClassification } from '../../lib/simulators/types';
 
 interface ScoreGaugeProps {
   score: number;
-  classification: Classification;
+  classification: LeadClassification;
 }
 
 const CLASSIFICATION_CONFIG = {

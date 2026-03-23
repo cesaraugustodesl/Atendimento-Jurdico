@@ -63,8 +63,9 @@ export default function StepContact({
             className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-4 text-white placeholder-slate-500 outline-none focus:border-sky-400/50"
           />
           <p className="mt-2 text-xs leading-6 text-slate-500">
-            Esse resumo entra junto na triagem e ajuda a comparar seu caso com
-            decisoes trabalhistas semelhantes.
+            Esse resumo entra junto na triagem e melhora a leitura do caso. Em
+            alguns fluxos, ele tambem ajuda a comparar o relato com bases
+            publicas semelhantes.
           </p>
         </div>
 
