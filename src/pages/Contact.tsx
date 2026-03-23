@@ -166,11 +166,11 @@ export default function Contact({ onNavigate }: ContactProps) {
                 </div>
                 <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
                   <p className="text-sm font-semibold text-white">
-                    Use o Simulador se:
+                    Use os Simuladores se:
                   </p>
                   <p className="mt-2 text-sm leading-6">
-                    a sua duvida e trabalhista e voce quer uma faixa inicial de
-                    risco ou valor possivel antes da consulta.
+                    a sua duvida envolve rescisao, horas extras, FGTS, golpe via
+                    PIX ou outro fluxo mais estruturado antes da consulta.
                   </p>
                 </div>
                 <div className="rounded-3xl border border-red-500/20 bg-red-500/10 p-5">
@@ -193,11 +193,11 @@ export default function Contact({ onNavigate }: ContactProps) {
                   Ir para o chat
                 </RouteLink>
                 <RouteLink
-                  href={pagePaths.simulator}
+                  href={pagePaths.simulators}
                   onNavigate={onNavigate}
                   className="btn-secondary flex-1"
                 >
-                  Abrir simulador
+                  Abrir simuladores
                 </RouteLink>
               </div>
             </div>

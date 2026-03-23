@@ -37,7 +37,7 @@ export function resolveRoute(pathname: string): ResolvedRoute {
       kind: "core",
       page: corePage,
       path,
-      navPage: corePage,
+      navPage: corePage === "simulator" ? "simulators" : corePage,
     };
   }
 
@@ -47,7 +47,7 @@ export function resolveRoute(pathname: string): ResolvedRoute {
       kind: "simulator-detail",
       entry: simulatorEntry,
       path,
-      navPage: "simulator",
+      navPage: "simulators",
     };
   }
 

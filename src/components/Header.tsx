@@ -116,14 +116,14 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
                   Agendar analise
                 </RouteLink>
                 <RouteLink
-                  href={pagePaths.simulator}
+                  href={pagePaths.simulators}
                   onNavigate={(href) => {
                     onNavigate(href);
                     closeMenu();
                   }}
                   className="btn-primary w-full justify-center"
                 >
-                  Ver simulador trabalhista
+                  Ver simuladores
                 </RouteLink>
               </div>
             </div>

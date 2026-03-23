@@ -97,8 +97,8 @@ export default function Areas({ onNavigate }: AreasProps) {
             <p className="mt-6 max-w-2xl text-lg">
               Esta pagina serve para orientar o caminho de entrada. Se a sua
               situacao estiver entre as areas abaixo, o chat ajuda a organizar o
-              contexto. Se for trabalhista com estimativa financeira, o
-              simulador e mais adequado.
+              contexto. Se houver necessidade de triagem mais estruturada, o hub
+              de simuladores e mais adequado.
             </p>
           </div>
         </div>
@@ -159,11 +159,11 @@ export default function Areas({ onNavigate }: AreasProps) {
                 </div>
                 <div className="rounded-3xl border border-emerald-400/20 bg-emerald-500/10 p-5">
                   <p className="text-sm font-semibold text-emerald-300">
-                    Simulador trabalhista
+                    Simuladores
                   </p>
                   <p className="mt-2 text-sm leading-6">
-                    Melhor quando a pergunta central e se existem direitos
-                    trabalhistas ou valores possiveis a receber.
+                    Melhor quando a pergunta central envolve verbas, FGTS, horas
+                    extras, golpe via PIX ou outro fluxo com perguntas mais objetivas.
                   </p>
                 </div>
                 <div className="rounded-3xl border border-amber-400/20 bg-amber-500/10 p-5">

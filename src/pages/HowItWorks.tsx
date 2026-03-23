@@ -20,7 +20,7 @@ const stages = [
     icon: MessageSquare,
     title: "1. Entrada guiada",
     description:
-      "Voce escolhe entre chat juridico geral, simulador trabalhista ou contato direto, sem cair em uma pagina generica.",
+      "Voce escolhe entre chat juridico geral, hub de simuladores ou contato direto, sem cair em uma pagina generica.",
   },
   {
     icon: Sparkles,
@@ -57,8 +57,8 @@ export default function HowItWorks({ onNavigate }: HowItWorksProps) {
             </h1>
             <p className="mt-6 max-w-2xl text-lg">
               Em vez de jogar todo mundo no mesmo fluxo, a experiencia foi
-              dividida em caminhos mais claros: chat juridico geral, simulador
-              trabalhista e contato humano.
+              dividida em caminhos mais claros: chat juridico geral,
+              simuladores juridicos e contato humano.
             </p>
           </div>
         </div>
@@ -165,8 +165,8 @@ export default function HowItWorks({ onNavigate }: HowItWorksProps) {
               Quer testar o fluxo agora?
             </h2>
             <p className="section-lead mx-auto">
-              Use o chat para triagem geral ou abra o simulador para sinais de
-              credito trabalhista. Se o caso ja pede estrategia, va direto para
+              Use o chat para triagem geral ou abra os simuladores para fluxos
+              mais especificos. Se o caso ja pede estrategia, va direto para
               contato.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
@@ -175,11 +175,11 @@ export default function HowItWorks({ onNavigate }: HowItWorksProps) {
                 Abrir chat IA
               </RouteLink>
               <RouteLink
-                href={pagePaths.simulator}
+                href={pagePaths.simulators}
                 onNavigate={onNavigate}
                 className="btn-secondary"
               >
-                Simulador trabalhista
+                Ver simuladores
                 <ArrowRight className="w-4 h-4" />
               </RouteLink>
             </div>

@@ -33,11 +33,11 @@ const startOptions = [
   },
   {
     icon: Calculator,
-    title: "Simulador trabalhista",
+    title: "Simuladores juridicos",
     description:
-      "Para estimar direitos nao pagos, entender risco e reunir contexto antes de falar com um advogado.",
-    action: "Abrir simulador",
-    href: pagePaths.simulator,
+      "Para abrir o hub com simulador trabalhista, rescisao, horas extras, FGTS e outros fluxos mais especificos.",
+    action: "Ver simuladores",
+    href: pagePaths.simulators,
     accent: "from-emerald-500/20 to-emerald-700/10 border-emerald-400/20",
   },
   {
@@ -130,8 +130,9 @@ export default function Home({ onNavigate }: HomeProps) {
               <p className="mt-6 max-w-2xl text-lg md:text-xl">
                 O site foi estruturado para duas entradas. O <strong>Chat IA</strong>{" "}
                 organiza duvidas juridicas gerais. O{" "}
-                <strong>Simulador Trabalhista</strong> ajuda quem precisa medir
-                sinais de direitos nao pagos antes da consulta.
+                <strong>hub de simuladores</strong> concentra os fluxos
+                especificos para quem precisa medir sinais de direitos nao
+                pagos antes da consulta.
               </p>
 
               <div className="mt-8 flex flex-col gap-4 sm:flex-row">
@@ -140,12 +141,12 @@ export default function Home({ onNavigate }: HomeProps) {
                   Comecar pelo chat
                 </RouteLink>
                 <RouteLink
-                  href={pagePaths.simulator}
+                  href={pagePaths.simulators}
                   onNavigate={onNavigate}
                   className="btn-secondary"
                 >
                   <Calculator className="w-5 h-5" />
-                  Abrir simulador trabalhista
+                  Ver simuladores
                 </RouteLink>
               </div>
 
@@ -456,8 +457,8 @@ export default function Home({ onNavigate }: HomeProps) {
             </h2>
             <p className="section-lead mx-auto">
               Se voce quer entender melhor o caso, comece pelo chat. Se a duvida
-              for trabalhista e envolver dinheiro a receber, use o simulador. Se
-              ja precisa de estrategia, fale direto com a equipe.
+              envolver verbas, direitos especificos ou triagem financeira, use os
+              simuladores. Se ja precisa de estrategia, fale direto com a equipe.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-4 sm:flex-row">
               <RouteLink href={pagePaths.chat} onNavigate={onNavigate} className="btn-primary">

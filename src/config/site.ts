@@ -37,7 +37,7 @@ export const siteConfig = {
     siteUrl: "https://project-nu-one-39.vercel.app",
     defaultTitle: "Atendimento Juridico Inteligente",
     defaultDescription:
-      "Triagem juridica com IA, simulador trabalhista, contato humano e conteudo pratico para organizar seu caso e decidir o proximo passo.",
+      "Triagem juridica com IA, simuladores juridicos, contato humano e conteudo pratico para organizar seu caso e decidir o proximo passo.",
     defaultOgImage: "/og-cover.svg",
     defaultOgType: "website",
   },
@@ -52,7 +52,7 @@ export const pageLabels: Record<Page, string> = {
   terms: "Termos de uso",
   privacy: "Politica de privacidade",
   simulator: "Simulador trabalhista",
-  simulators: "Simuladores juridicos",
+  simulators: "Simuladores",
   blog: "Blog",
 };
 
@@ -73,12 +73,12 @@ export const corePageSeo: Record<Page, CorePageSeo> = {
   home: {
     title: "Triagem juridica com IA, simulador trabalhista e consulta humana",
     description:
-      "Entenda seu caso com linguagem clara, use o chat juridico, o simulador trabalhista e guias praticos para decidir entre triagem e atendimento humano.",
+      "Entenda seu caso com linguagem clara, use o chat juridico, os simuladores juridicos e guias praticos para decidir entre triagem e atendimento humano.",
   },
   "how-it-works": {
-    title: "Como funciona a triagem juridica e quando falar com um advogado",
+    title: "Como funciona a triagem juridica e quando usar chat, simuladores ou contato",
     description:
-      "Veja como funcionam o chat juridico, o simulador trabalhista e o encaminhamento para atendimento humano em casos que pedem estrategia.",
+      "Veja como funcionam o chat juridico, o hub de simuladores e o encaminhamento para atendimento humano em casos que pedem estrategia.",
   },
   areas: {
     title: "Areas de atuacao: trabalhista, familia, saude, contratos e golpes",
@@ -93,7 +93,7 @@ export const corePageSeo: Record<Page, CorePageSeo> = {
   contact: {
     title: "Contato para analise juridica humana",
     description:
-      "Leve seu caso para atendimento humano quando houver urgencia, necessidade de estrategia, revisao documental ou decisao juridica sensivel.",
+      "Leve seu caso para atendimento humano quando houver urgencia, necessidade de estrategia, revisao documental ou depois de passar pelo chat e pelos simuladores.",
   },
   terms: {
     title: "Termos de uso da plataforma juridica",
@@ -132,7 +132,7 @@ export const pathToPage = Object.entries(pagePaths).reduce<Record<string, Page>>
 
 export const primaryNav: Array<{ id: Page; label: string; href: string }> = [
   { id: "home", label: "Inicio", href: pagePaths.home },
-  { id: "simulator", label: "Simulador", href: pagePaths.simulator },
+  { id: "simulators", label: "Simuladores", href: pagePaths.simulators },
   { id: "chat", label: "Chat IA", href: pagePaths.chat },
   { id: "areas", label: "Areas", href: pagePaths.areas },
   { id: "blog", label: "Blog", href: pagePaths.blog },
