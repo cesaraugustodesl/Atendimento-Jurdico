@@ -32,7 +32,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
               <span className="text-sm md:text-base font-semibold tracking-wide uppercase text-slate-300">
                 Atendimento Juridico
               </span>
-              <span className="text-base md:text-lg font-serif font-bold">
+              <span className="text-base md:text-lg font-display font-bold">
                 Inteligente
               </span>
             </div>

@@ -120,8 +120,8 @@ export default function Home({ onNavigate }: HomeProps) {
     <div className="page-frame pt-16 md:pt-20">
       <section className="section-spacing">
         <div className="container-custom">
-          <div className="grid items-center gap-10 lg:grid-cols-[1.2fr_0.8fr]">
-            <div>
+          <div className="hero-layout items-start">
+            <div className="hero-copy">
               <span className="eyebrow mb-6">triagem juridica com clareza</span>
               <h1 className="max-w-4xl">
                 Entenda o seu caso, organize o contexto e escolha o proximo
@@ -165,11 +165,17 @@ export default function Home({ onNavigate }: HomeProps) {
               </div>
             </div>
 
-            <div className="surface-panel p-6 md:p-8">
-              <p className="text-sm uppercase tracking-[0.18em] text-slate-400">
+            <div className="surface-panel hero-entry-panel">
+              <span className="eyebrow">rota de entrada</span>
+              <h2 className="mt-5 text-3xl font-bold text-white font-display">
                 Escolha sua entrada
+              </h2>
+              <p className="mt-3 max-w-md text-sm leading-7 text-slate-300">
+                Cada caminho foi separado por intencao. Assim a triagem fica
+                mais clara, mais rapida e menos genérica.
               </p>
-              <div className="mt-5 space-y-4">
+              <div className="glow-divider mt-6" />
+              <div className="hero-entry-stack">
                 {startOptions.map((option) => {
                   const Icon = option.icon;
                   return (
@@ -177,20 +183,20 @@ export default function Home({ onNavigate }: HomeProps) {
                       key={option.title}
                       href={option.href}
                       onNavigate={onNavigate}
-                      className={`w-full rounded-3xl border bg-gradient-to-br p-5 text-left transition-transform hover:-translate-y-1 ${option.accent}`}
+                      className={`hero-entry-card w-full border text-left transition-transform ${option.accent}`}
                     >
-                      <div className="flex items-start gap-4">
+                      <div className="hero-entry-card__content">
                         <div className="mt-1 rounded-2xl bg-slate-950/70 p-3">
                           <Icon className="w-5 h-5 text-white" />
                         </div>
-                        <div className="flex-1">
+                        <div className="hero-entry-card__body">
                           <h3 className="text-xl font-bold text-white">
                             {option.title}
                           </h3>
-                          <p className="mt-2 text-sm leading-6">
+                          <p className="mt-2 text-sm leading-6 text-slate-300">
                             {option.description}
                           </p>
-                          <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-white">
+                          <span className="hero-entry-card__action">
                             {option.action}
                             <ArrowRight className="w-4 h-4" />
                           </span>

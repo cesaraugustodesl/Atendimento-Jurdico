@@ -29,7 +29,7 @@ export default function Footer({ onNavigate }: FooterProps) {
                 <p className="text-sm uppercase tracking-[0.2em] text-slate-400">
                   Atendimento Juridico
                 </p>
-                <p className="text-xl font-serif font-bold text-white">
+                <p className="text-xl font-display font-bold text-white">
                   Inteligente
                 </p>
               </div>
