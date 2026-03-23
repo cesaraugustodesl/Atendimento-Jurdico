@@ -181,9 +181,9 @@ export default function ResultsPanel({
           </h2>
         </div>
         <p className="mt-4 text-sm leading-7 text-slate-300">
-          Quanto mais objetivo for o resumo, melhor a comparacao. Cite o que
-          houve, quais direitos parecem nao pagos, como foi a demissao e o que
-          mais pode diferenciar seu caso.
+          Escreva o caso como se estivesse explicando para um advogado em 30
+          segundos. Conte como era a rotina, o que deixou de ser pago, como foi
+          o desligamento e quais provas voce tem.
         </p>
         <textarea
           rows={5}
@@ -205,9 +205,9 @@ export default function ResultsPanel({
             {casesLoading ? "Comparando..." : "Buscar e comparar casos"}
           </button>
           <p className="text-xs leading-6 text-slate-500">
-            A comparacao cruza seu resumo com tags, texto dos casos publicos e
-            uma leitura de IA para destacar semelhancas, diferencas e tempo
-            observado quando a base traz essa informacao.
+            A comparacao cruza seu relato com decisoes trabalhistas da base
+            publica. Quando a fonte direta nao estiver cadastrada, eu mostro um
+            link de pesquisa pelo numero do processo.
           </p>
         </div>
         {comparisonError ? (

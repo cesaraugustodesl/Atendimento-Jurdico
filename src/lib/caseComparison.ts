@@ -97,6 +97,14 @@ function toSafeNumber(value: unknown) {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
 function toCaseRecord(record: RawCaseRecord): CaseComparisonItem {
   return {
     id: record.id ?? crypto.randomUUID(),
@@ -143,6 +151,13 @@ function calculateRelevance(
     summaryTokens.length > 0
       ? Math.round((summaryMatches / summaryTokens.length) * 38)
       : 0;
+
+  if (tags.length === 0 && summaryTokens.length > 0) {
+    const minimumTextMatches = Math.min(2, summaryTokens.length);
+    if (summaryMatches < minimumTextMatches) {
+      return 0;
+    }
+  }
 
   return Math.max(tagScore + textScore, tagMatches > 0 ? 24 : 0);
 }
@@ -198,6 +213,11 @@ function buildComparison(
 
   const bestMatch = cases[0];
   const matchingTags = bestMatch.tags.slice(0, 3);
+  const favorableCount = cases.filter((item) =>
+    item.resultado.toLowerCase().includes("procedente")
+  ).length;
+  const favorableRate = Math.round((favorableCount / cases.length) * 100);
+  const maxAward = Math.max(...cases.map((item) => item.valor_condenacao), 0);
   const durationText =
     durationStats.sampleSize > 0
       ? `Nos casos com duracao registrada, a media observada foi de ${formatDurationMonths(
@@ -205,28 +225,30 @@ function buildComparison(
         )}, indo de ${formatDurationMonths(durationStats.minMonths)} a ${formatDurationMonths(
           durationStats.maxMonths
         )}.`
-      : "A base atual nao traz duracao registrada suficiente para estimar o tempo medio com confianca.";
+      : "Hoje a base publica do projeto ainda nao traz a duracao do processo cadastrada por caso. Por isso, eu nao consigo estimar esse tempo com confianca aqui.";
 
   return {
-    overview: `Encontrei ${cases.length} caso${
+    overview: `Encontrei ${cases.length} deciso${cases.length === 1 ? "a" : "es"} trabalhista${
       cases.length === 1 ? "" : "s"
-    } com proximidade relevante. O mais forte na base atual e "${bestMatch.titulo}".`,
+    } com proximidade relevante. O melhor encaixe agora e "${bestMatch.titulo}", julgado por ${bestMatch.tribunal}${
+      bestMatch.ano ? ` em ${bestMatch.ano}` : ""
+    }.`,
     matching_points: [
       matchingTags.length > 0
-        ? `O melhor match cruza principalmente com ${matchingTags.join(", ")}.`
-        : "O melhor match se aproxima mais pelo texto do resumo do que por tags fixas.",
+        ? `Os sinais que mais aproximam seu relato da base sao ${matchingTags.join(", ")}.`
+        : "O melhor match ficou mais proximo pela narrativa do resumo do que por tags fixas.",
       summaryTokens.length > 0
-        ? `Seu resumo compartilha sinais importantes com a narrativa dos casos encontrados.`
-        : `A comparacao ficou baseada principalmente nas tags marcadas no fluxo.`,
+        ? `Na amostra encontrada, ${favorableRate}% das decisoes foram favoraveis e o maior valor cadastrado chegou a ${formatCurrency(maxAward)}.`
+        : `Como voce nao detalhou o resumo, a comparacao ficou baseada principalmente nos sinais marcados no fluxo.`,
     ],
     differences: [
-      "Pequenas diferencas de prova, periodo exato e forma de contratacao podem mudar bastante o desfecho.",
-      "Mesmo com casos parecidos na base, valor e resultado nunca devem ser lidos como promessa.",
+      `O melhor caso da base terminou como "${bestMatch.resultado}". Isso ajuda a calibrar expectativa, mas nao fecha o desfecho do seu caso.`,
+      "Detalhes como prova disponivel, periodo exato, funcao exercida e forma de desligamento podem mudar bastante o resultado.",
     ],
     duration_takeaways: [durationText],
     caution_points: [
-      "Se houver prazo correndo, risco de perda de prova ou urgencia, o ideal e levar para atendimento humano.",
-      "Quanto mais detalhado o resumo, melhor tende a ficar a comparacao com a base publica.",
+      "Esses casos servem para orientar a leitura inicial, nao para prometer ganho ou prazo final.",
+      "Se houver urgencia, prazo correndo ou risco de perder prova, leve o caso para atendimento humano.",
     ],
   };
 }
@@ -234,6 +256,9 @@ function buildComparison(
 async function fetchFromFunction(
   request: CaseComparisonRequest
 ): Promise<CaseComparisonResponse | null> {
+  const tags = sanitizeTags(request.tags);
+  const summary = sanitizeSummary(request.summary);
+  const summaryTokens = tokenizeSummary(summary);
   const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/buscar-jurisprudencia`;
   const response = await fetch(apiUrl, {
     method: "POST",
@@ -257,12 +282,29 @@ async function fetchFromFunction(
     cases?: RawCaseRecord[];
   };
   const cases = Array.isArray(payload.cases)
-    ? payload.cases.map((item) => toCaseRecord(item))
+    ? payload.cases
+        .map((item) => toCaseRecord(item))
+        .map((item) => ({
+          ...item,
+          relevancia: Math.max(
+            item.relevancia,
+            calculateRelevance(item, tags, summaryTokens)
+          ),
+        }))
+        .filter((item) => item.relevancia > 0)
+        .sort((a, b) => {
+          if (b.relevancia !== a.relevancia) {
+            return b.relevancia - a.relevancia;
+          }
+
+          return b.valor_condenacao - a.valor_condenacao;
+        })
+        .slice(0, request.limit ?? 5)
     : [];
   const durationStats =
     payload.durationStats ?? calculateDurationStats(cases);
   const comparison =
-    payload.comparison ?? buildComparison(cases, durationStats, request.summary);
+    payload.comparison ?? buildComparison(cases, durationStats, summary);
 
   return {
     cases,

@@ -127,6 +127,7 @@ export default function Chat({ onNavigate }: ChatProps) {
 
   const currentAnswer = currentQuestion ? answers[currentQuestion.id] ?? "" : "";
   const canProceed = currentAnswer.trim().length > 0;
+  const supportsPublicCaseComparison = selectedCategory === "demissao";
 
   const handleCategorySelect = (categoryText: string) => {
     setSelectedCategory(getCategoryKey(categoryText));
@@ -267,6 +268,13 @@ export default function Chat({ onNavigate }: ChatProps) {
   };
 
   const handleCompareCases = async () => {
+    if (!supportsPublicCaseComparison) {
+      setComparisonError(
+        "A base publica de comparacao deste projeto esta focada em casos trabalhistas."
+      );
+      return;
+    }
+
     const summary = caseSummary.trim();
     const tags = categoryTagMap[selectedCategory] ?? [];
 
@@ -675,64 +683,86 @@ export default function Chat({ onNavigate }: ChatProps) {
                     </div>
                   </div>
 
-                  <div className="surface-card p-5 md:p-6">
-                    <div className="flex items-start gap-3">
-                      <Search className="mt-1 h-5 w-5 flex-shrink-0 text-sky-400" />
-                      <div>
-                        <h3 className="text-xl font-bold text-white">
-                          Resuma o caso para comparar com casos publicos
-                        </h3>
-                        <p className="mt-3 text-sm leading-7 text-slate-300">
-                          Esta etapa funciona melhor quando voce descreve o que
-                          aconteceu com suas palavras. A base atual de casos
-                          semelhantes esta mais madura para temas trabalhistas,
-                          mas voce pode testar mesmo assim.
-                        </p>
+                  {supportsPublicCaseComparison ? (
+                    <>
+                      <div className="surface-card p-5 md:p-6">
+                        <div className="flex items-start gap-3">
+                          <Search className="mt-1 h-5 w-5 flex-shrink-0 text-sky-400" />
+                          <div>
+                            <h3 className="text-xl font-bold text-white">
+                              Compare com casos publicos trabalhistas
+                            </h3>
+                            <p className="mt-3 text-sm leading-7 text-slate-300">
+                              Esse bloco funciona melhor para demissao, FGTS,
+                              verbas rescisorias e jornada. Escreva o caso com
+                              suas palavras e eu busco decisoes trabalhistas
+                              mais proximas.
+                            </p>
+                          </div>
+                        </div>
+
+                        <textarea
+                          rows={5}
+                          value={caseSummary}
+                          onChange={(event) => setCaseSummary(event.target.value)}
+                          placeholder="Exemplo: fui demitido sem receber tudo, trabalhei sem registro por um periodo e tenho mensagens e comprovantes..."
+                          className="mt-5 w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-4 text-white placeholder-slate-500 outline-none focus:border-sky-400/50"
+                        />
+
+                        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                          <button
+                            onClick={handleCompareCases}
+                            disabled={comparisonLoading}
+                            className={`rounded-2xl px-6 py-3 font-semibold sm:min-w-[260px] ${
+                              comparisonLoading
+                                ? "bg-slate-800 text-slate-500 cursor-not-allowed"
+                                : "bg-gradient-to-r from-sky-500 to-blue-700 text-white"
+                            }`}
+                          >
+                            {comparisonLoading
+                              ? "Comparando..."
+                              : "Buscar casos comparaveis"}
+                          </button>
+                          <p className="text-xs leading-6 text-slate-500">
+                            A comparacao usa a base trabalhista do projeto.
+                            Quando a fonte direta nao estiver cadastrada, o card
+                            do caso mostra um link de pesquisa pelo numero do
+                            processo.
+                          </p>
+                        </div>
+
+                        {comparisonError ? (
+                          <p className="mt-4 text-sm text-red-300">{comparisonError}</p>
+                        ) : null}
+                      </div>
+
+                      <SimilarCases
+                        cases={similarCases}
+                        loading={comparisonLoading}
+                        comparison={comparison}
+                        durationStats={durationStats}
+                        title="Casos publicos comparaveis"
+                        subtitle="Comparacao baseada no seu resumo livre e na base trabalhista publica cadastrada no projeto."
+                      />
+                    </>
+                  ) : (
+                    <div className="surface-card p-5 md:p-6">
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle className="mt-1 h-5 w-5 flex-shrink-0 text-amber-300" />
+                        <div>
+                          <h3 className="text-xl font-bold text-white">
+                            Comparacao publica limitada por area
+                          </h3>
+                          <p className="mt-3 text-sm leading-7 text-slate-300">
+                            Para evitar falso parecido, a comparacao com casos
+                            publicos ficou restrita aos fluxos trabalhistas.
+                            Neste tema, use o proprio chat para aprofundar o
+                            caso ou leve para atendimento humano.
+                          </p>
+                        </div>
                       </div>
                     </div>
-
-                    <textarea
-                      rows={5}
-                      value={caseSummary}
-                      onChange={(event) => setCaseSummary(event.target.value)}
-                      placeholder="Exemplo: fui demitido sem receber tudo, trabalhei sem registro por um periodo e tenho mensagens e comprovantes..."
-                      className="mt-5 w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-4 text-white placeholder-slate-500 outline-none focus:border-sky-400/50"
-                    />
-
-                    <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                      <button
-                        onClick={handleCompareCases}
-                        disabled={comparisonLoading}
-                        className={`rounded-2xl px-6 py-3 font-semibold sm:min-w-[260px] ${
-                          comparisonLoading
-                            ? "bg-slate-800 text-slate-500 cursor-not-allowed"
-                            : "bg-gradient-to-r from-sky-500 to-blue-700 text-white"
-                        }`}
-                      >
-                        {comparisonLoading
-                          ? "Comparando..."
-                          : "Buscar casos comparaveis"}
-                      </button>
-                      <p className="text-xs leading-6 text-slate-500">
-                        O comparador usa resumo livre, sinais do tema escolhido
-                        e leitura de IA para destacar semelhancas, diferencas e
-                        pontos de duracao quando a base publica traz esse dado.
-                      </p>
-                    </div>
-
-                    {comparisonError ? (
-                      <p className="mt-4 text-sm text-red-300">{comparisonError}</p>
-                    ) : null}
-                  </div>
-
-                  <SimilarCases
-                    cases={similarCases}
-                    loading={comparisonLoading}
-                    comparison={comparison}
-                    durationStats={durationStats}
-                    title="Casos publicos comparaveis"
-                    subtitle="Comparacao baseada no resumo livre e na base publica disponivel no projeto."
-                  />
+                  )}
                 </div>
               )}
             </div>
