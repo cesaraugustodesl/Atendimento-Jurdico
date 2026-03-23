@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, Calculator, Shield, Users } from "lucide-react";
 import ProgressBar from "../components/simulator/ProgressBar";
 import StepContact from "../components/simulator/StepContact";
@@ -17,6 +17,7 @@ import type {
   SimulatorOutcome,
 } from "../lib/simulators/types";
 import { saveSimulatorLead } from "../services/simulatorLeadService";
+import { trackEvent } from "../services/trackingService";
 
 interface SimulatorExperienceProps {
   simulator: SimulatorDefinition;
@@ -59,13 +60,51 @@ export default function SimulatorExperience({
   const [comparison, setComparison] = useState<CaseComparisonInsight | null>(null);
   const [durationStats, setDurationStats] = useState<CaseDurationStats | null>(null);
   const [comparisonError, setComparisonError] = useState("");
+  const stepRef = useRef(step);
+  const showResultRef = useRef(showResult);
 
   const totalSteps = simulator.steps.length + 1;
   const progressLabels = [...simulator.stepLabels, "Contato"];
   const currentStep = simulator.steps[step];
 
+  useEffect(() => {
+    stepRef.current = step;
+    showResultRef.current = showResult;
+  }, [step, showResult]);
+
+  useEffect(() => {
+    trackEvent("iniciou_simulador", {
+      simulator_slug: simulator.slug,
+      simulator_nome: simulator.name,
+    });
+
+    return () => {
+      if (!showResultRef.current && stepRef.current > 0) {
+        trackEvent("abandonou_etapa", {
+          simulator_slug: simulator.slug,
+          simulator_nome: simulator.name,
+          etapa_atual: stepRef.current,
+        });
+      }
+    };
+  }, [simulator.slug, simulator.name]);
+
   const handleValueChange = (fieldId: string, value: SimulatorValue) => {
     setValues((current) => ({ ...current, [fieldId]: value }));
+  };
+
+  const handleStepNext = () => {
+    trackEvent("avancou_etapa", {
+      simulator_slug: simulator.slug,
+      simulator_nome: simulator.name,
+      etapa_atual: currentStep?.id ?? "contato",
+      proxima_etapa: simulator.steps[step + 1]?.id ?? "contato",
+    });
+    setStep((current) => current + 1);
+  };
+
+  const handleStepBack = () => {
+    setStep((current) => Math.max(current - 1, 0));
   };
 
   const fetchComparison = async (computed: SimulatorOutcome, summary: string) => {
@@ -118,6 +157,7 @@ export default function SimulatorExperience({
 
     const computed = simulator.computeResult(values, { caseSummary });
     setResult(computed);
+    let leadSaved = false;
 
     try {
       await saveSimulatorLead({
@@ -131,14 +171,31 @@ export default function SimulatorExperience({
           caseSummary,
         },
       });
+      leadSaved = true;
     } catch {
       // Falha silenciosa para nao travar a experiencia principal.
     }
+
+    trackEvent("enviou_lead", {
+      simulator_slug: simulator.slug,
+      simulator_nome: simulator.name,
+      lead_salvo: leadSaved,
+      score: computed.score,
+      lead_priority: computed.leadPriority,
+    });
 
     setLoading(false);
     setShowResult(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
     await fetchComparison(computed, caseSummary.trim());
+    trackEvent("visualizou_resultado", {
+      simulator_slug: simulator.slug,
+      simulator_nome: simulator.name,
+      lead_salvo: leadSaved,
+      score: computed.score,
+      lead_priority: computed.leadPriority,
+      confidence_score: computed.confidenceScore,
+    });
   };
 
   const handleReset = () => {
@@ -222,8 +279,8 @@ export default function SimulatorExperience({
                     step={currentStep}
                     values={values}
                     onChange={handleValueChange}
-                    onNext={() => setStep((current) => current + 1)}
-                    onBack={() => setStep((current) => Math.max(current - 1, 0))}
+                    onNext={handleStepNext}
+                    onBack={handleStepBack}
                     isFirstStep={step === 0}
                   />
                 ) : (
@@ -237,7 +294,7 @@ export default function SimulatorExperience({
                     onEmailChange={setEmail}
                     onCaseSummaryChange={setCaseSummary}
                     onSubmit={handleSubmit}
-                    onBack={() => setStep((current) => Math.max(current - 1, 0))}
+                    onBack={handleStepBack}
                     loading={loading}
                   />
                 )}

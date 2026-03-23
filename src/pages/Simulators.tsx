@@ -1,6 +1,7 @@
 import { ArrowRight, Clock3, Scale } from "lucide-react";
 import RouteLink from "../components/RouteLink";
 import { featuredSimulators, simulatorRegistry } from "../lib/simulators/registry";
+import { trackEvent } from "../services/trackingService";
 
 interface SimulatorsProps {
   onNavigate: (href: string) => void;
@@ -11,6 +12,7 @@ function SimulatorCard({
   description,
   timeToComplete,
   area,
+  simulatorSlug,
   href,
   onNavigate,
 }: {
@@ -18,6 +20,7 @@ function SimulatorCard({
   description: string;
   timeToComplete: string;
   area: string;
+  simulatorSlug: string;
   href: string;
   onNavigate: (href: string) => void;
 }) {
@@ -25,6 +28,13 @@ function SimulatorCard({
     <RouteLink
       href={href}
       onNavigate={onNavigate}
+      onClick={() =>
+        trackEvent("clicou_em_simulador", {
+          origem: "hub_simuladores",
+          simulator_slug: simulatorSlug,
+          simulator_path: href,
+        })
+      }
       className="surface-card block p-6 transition-transform hover:-translate-y-1"
     >
       <div className="flex items-center justify-between gap-3">
@@ -102,6 +112,13 @@ export default function Simulators({ onNavigate }: SimulatorsProps) {
                 <RouteLink
                   href={primarySimulator.path}
                   onNavigate={onNavigate}
+                  onClick={() =>
+                    trackEvent("clicou_em_simulador", {
+                      origem: "hub_simuladores_principal",
+                      simulator_slug: primarySimulator.slug,
+                      simulator_path: primarySimulator.path,
+                    })
+                  }
                   className="btn-primary mt-8 w-full justify-center"
                 >
                   Abrir simulador principal
@@ -124,6 +141,7 @@ export default function Simulators({ onNavigate }: SimulatorsProps) {
                   description={simulator.shortDescription}
                   timeToComplete={simulator.timeToComplete}
                   area={simulator.area}
+                  simulatorSlug={simulator.slug}
                   href={simulator.path}
                   onNavigate={onNavigate}
                 />

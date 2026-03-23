@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import RouteLink from "../components/RouteLink";
 import { buildWhatsAppLink, pagePaths, siteConfig } from "../config/site";
+import { trackEvent } from "../services/trackingService";
 
 interface ContactProps {
   onNavigate: (href: string) => void;
@@ -93,6 +94,10 @@ export default function Contact({ onNavigate }: ContactProps) {
       formData.message,
     ].join("\n");
 
+    trackEvent("clicou_whatsapp", {
+      origem: "pagina_contato",
+      area: formData.area || "nao_informada",
+    });
     window.open(buildWhatsAppLink(message), "_blank", "noopener,noreferrer");
     setSubmitted(true);
   };

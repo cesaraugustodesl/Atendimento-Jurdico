@@ -22,6 +22,7 @@ import type {
   SimulatorDefinition,
   SimulatorOutcome,
 } from "../../lib/simulators/types";
+import { trackEvent } from "../../services/trackingService";
 
 interface ResultsPanelProps {
   simulator: SimulatorDefinition;
@@ -352,6 +353,15 @@ export default function ResultsPanel({
             target="_blank"
             rel="noopener noreferrer"
             className="btn-primary mt-6 w-full"
+            onClick={() =>
+              trackEvent("clicou_whatsapp", {
+                origem: "resultado_simulador",
+                simulator_slug: simulator.slug,
+                simulator_nome: simulator.name,
+                score: result.score,
+                lead_priority: result.leadPriority,
+              })
+            }
           >
             Atendimento via WhatsApp
           </a>

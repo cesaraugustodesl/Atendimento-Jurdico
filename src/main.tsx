@@ -2,12 +2,15 @@ import { StrictMode } from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
+import { initializeAnalytics } from "./services/trackingService";
 
 const container = document.getElementById("root");
 
 if (!container) {
   throw new Error("Root element not found.");
 }
+
+initializeAnalytics();
 
 const app = (
   <StrictMode>

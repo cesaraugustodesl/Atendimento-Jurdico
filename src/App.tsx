@@ -17,6 +17,8 @@ import Simulators from "./pages/Simulators";
 import SimulatorExperience from "./pages/SimulatorExperience";
 import { normalizePath } from "./config/site";
 import { getSimulatorBySlug } from "./lib/simulators/registry";
+import { getRouteLabel } from "./lib/routing";
+import { trackEvent, trackPageView } from "./services/trackingService";
 
 interface AppProps {
   initialPath?: string;
@@ -57,6 +59,25 @@ function App({ initialPath }: AppProps) {
     }
 
     applySeoDocument(getSeoDocument(route));
+  }, [route]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    trackPageView(route.path, getRouteLabel(route));
+
+    if (route.path === "/") {
+      trackEvent("visualizou_home", {
+        route_kind: route.kind,
+      });
+    } else {
+      trackEvent("visualizou_pagina", {
+        route_kind: route.kind,
+        route_path: route.path,
+      });
+    }
   }, [route]);
 
   const handleNavigate = (href: string) => {

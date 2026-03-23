@@ -4,6 +4,7 @@ import type {
   SimulatorFormValues,
   SimulatorOutcome,
 } from "../lib/simulators/types";
+import { getAttribution } from "./trackingService";
 
 interface LeadIdentity {
   name: string;
@@ -65,6 +66,8 @@ export async function saveSimulatorLead({
   result,
   lead,
 }: SaveSimulatorLeadInput) {
+  const attribution = getAttribution();
+
   const payload = {
     simulator_slug: simulator.slug,
     nome: lead.name,
@@ -76,9 +79,14 @@ export async function saveSimulatorLead({
     lead_score: result.score,
     lead_priority: result.leadPriority,
     origem:
-      typeof window !== "undefined" ? window.location.pathname : simulator.path,
+      attribution?.landingPath ||
+      (typeof window !== "undefined" ? window.location.pathname : simulator.path),
     page_url:
-      typeof window !== "undefined" ? window.location.href : simulator.path,
+      attribution?.landingUrl ||
+      (typeof window !== "undefined" ? window.location.href : simulator.path),
+    utm_source: attribution?.utmSource ?? "",
+    utm_medium: attribution?.utmMedium ?? "",
+    utm_campaign: attribution?.utmCampaign ?? "",
     status: "novo",
   };
 
