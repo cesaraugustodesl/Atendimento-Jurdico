@@ -101,24 +101,6 @@ export default function Simulator({ onNavigate }: SimulatorProps) {
     }
   };
 
-  const handleCompareCase = async () => {
-    if (!result) {
-      return;
-    }
-
-    const activeViolationTags = getActiveViolationTags();
-    const summary = caseSummary.trim();
-
-    if (!summary && activeViolationTags.length === 0) {
-      setComparisonError(
-        "Escreva um resumo do que aconteceu para eu conseguir comparar melhor com casos publicos."
-      );
-      return;
-    }
-
-    await fetchSimilarCases(activeViolationTags, summary, result);
-  };
-
   const handleSubmit = async () => {
     if (!contractType) {
       return;
@@ -163,8 +145,9 @@ export default function Simulator({ onNavigate }: SimulatorProps) {
     setShowResult(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
 
-    if (activeViolationTags.length > 0) {
-      fetchSimilarCases(activeViolationTags, "", computed);
+    const summary = caseSummary.trim();
+    if (activeViolationTags.length > 0 || summary) {
+      fetchSimilarCases(activeViolationTags, summary, computed);
     }
   };
 
@@ -300,9 +283,11 @@ export default function Simulator({ onNavigate }: SimulatorProps) {
                     name={name}
                     whatsapp={whatsapp}
                     email={email}
+                    caseSummary={caseSummary}
                     onNameChange={setName}
                     onWhatsappChange={setWhatsapp}
                     onEmailChange={setEmail}
+                    onCaseSummaryChange={setCaseSummary}
                     onSubmit={handleSubmit}
                     onBack={prevStep}
                     loading={loading}
@@ -319,10 +304,7 @@ export default function Simulator({ onNavigate }: SimulatorProps) {
                 casesLoading={casesLoading}
                 comparison={comparison}
                 durationStats={durationStats}
-                caseSummary={caseSummary}
                 comparisonError={comparisonError}
-                onCaseSummaryChange={setCaseSummary}
-                onCompareCase={handleCompareCase}
                 onReset={handleReset}
                 onNavigate={onNavigate}
               />

@@ -9,7 +9,6 @@ import {
   FileText,
   Heart,
   MessageSquare,
-  Search,
   Send,
   Shield,
   ShoppingCart,
@@ -191,6 +190,46 @@ export default function Chat({ onNavigate }: ChatProps) {
     }
   };
 
+  const runCaseComparison = async (
+    summary: string,
+    conversation: Message[]
+  ) => {
+    setComparisonLoading(true);
+    setComparisonError("");
+
+    try {
+      const data = await fetchCaseComparison({
+        tags: categoryTagMap[selectedCategory] ?? [],
+        summary,
+        limit: 5,
+        context: {
+          source: "chat",
+          category: selectedCategory,
+          categoryLabel: categoryQuestions[selectedCategory]?.category ?? "",
+          userMessages: conversation
+            .filter((message) => message.role === "user")
+            .map((message) => message.content)
+            .join("\n\n")
+            .slice(0, 2200),
+        },
+      });
+
+      setSimilarCases(data.cases || []);
+      setComparison(data.comparison ?? null);
+      setDurationStats(data.durationStats ?? null);
+    } catch (error) {
+      console.error("Erro ao comparar casos:", error);
+      setSimilarCases([]);
+      setComparison(null);
+      setDurationStats(null);
+      setComparisonError(
+        "Nao consegui comparar esse caso com a base publica agora. Tente novamente em instantes."
+      );
+    } finally {
+      setComparisonLoading(false);
+    }
+  };
+
   const handleNextQuestion = async () => {
     const category = categoryQuestions[selectedCategory];
     if (!category) {
@@ -223,6 +262,14 @@ export default function Chat({ onNavigate }: ChatProps) {
 
     setMessages([initialMessage]);
     setFlowStep("conversation");
+    if (selectedCategory === "demissao" && summarySeed.trim()) {
+      await Promise.all([
+        sendConversation([initialMessage]),
+        runCaseComparison(summarySeed.trim(), [initialMessage]),
+      ]);
+      return;
+    }
+
     await sendConversation([initialMessage]);
   };
 
@@ -240,8 +287,18 @@ export default function Chat({ onNavigate }: ChatProps) {
     };
 
     const nextConversation = [...messages, userMessage];
+    const nextSummary = [caseSummary.trim(), trimmed].filter(Boolean).join("\n");
     setMessages(nextConversation);
     setComposerValue("");
+    if (supportsPublicCaseComparison) {
+      setCaseSummary(nextSummary);
+      await Promise.all([
+        sendConversation(nextConversation),
+        runCaseComparison(nextSummary, nextConversation),
+      ]);
+      return;
+    }
+
     await sendConversation(nextConversation);
   };
 
@@ -265,60 +322,6 @@ export default function Chat({ onNavigate }: ChatProps) {
     setComparison(null);
     setDurationStats(null);
     setFlowStep(consentGiven ? "category" : "consent");
-  };
-
-  const handleCompareCases = async () => {
-    if (!supportsPublicCaseComparison) {
-      setComparisonError(
-        "A base publica de comparacao deste projeto esta focada em casos trabalhistas."
-      );
-      return;
-    }
-
-    const summary = caseSummary.trim();
-    const tags = categoryTagMap[selectedCategory] ?? [];
-
-    if (!summary) {
-      setComparisonError(
-        "Escreva um resumo curto do que aconteceu para eu comparar com a base publica."
-      );
-      return;
-    }
-
-    setComparisonLoading(true);
-    setComparisonError("");
-
-    try {
-      const data = await fetchCaseComparison({
-        tags,
-        summary,
-        limit: 5,
-        context: {
-          source: "chat",
-          category: selectedCategory,
-          categoryLabel: categoryQuestions[selectedCategory]?.category ?? "",
-          userMessages: messages
-            .filter((message) => message.role === "user")
-            .map((message) => message.content)
-            .join("\n\n")
-            .slice(0, 2200),
-        },
-      });
-
-      setSimilarCases(data.cases || []);
-      setComparison(data.comparison ?? null);
-      setDurationStats(data.durationStats ?? null);
-    } catch (error) {
-      console.error("Erro ao comparar casos:", error);
-      setSimilarCases([]);
-      setComparison(null);
-      setDurationStats(null);
-      setComparisonError(
-        "Nao consegui comparar esse caso com a base publica agora. Tente novamente em instantes."
-      );
-    } finally {
-      setComparisonLoading(false);
-    }
   };
 
   const formatAssistantMessage = (content: string) => {
@@ -685,56 +688,21 @@ export default function Chat({ onNavigate }: ChatProps) {
 
                   {supportsPublicCaseComparison ? (
                     <>
-                      <div className="surface-card p-5 md:p-6">
-                        <div className="flex items-start gap-3">
-                          <Search className="mt-1 h-5 w-5 flex-shrink-0 text-sky-400" />
-                          <div>
-                            <h3 className="text-xl font-bold text-white">
-                              Compare com casos publicos trabalhistas
-                            </h3>
-                            <p className="mt-3 text-sm leading-7 text-slate-300">
-                              Esse bloco funciona melhor para demissao, FGTS,
-                              verbas rescisorias e jornada. Escreva o caso com
-                              suas palavras e eu busco decisoes trabalhistas
-                              mais proximas.
-                            </p>
+                      {comparisonError ? (
+                        <div className="surface-card p-5 md:p-6">
+                          <div className="flex items-start gap-3">
+                            <AlertTriangle className="mt-1 h-5 w-5 flex-shrink-0 text-red-300" />
+                            <div>
+                              <h3 className="text-xl font-bold text-white">
+                                Nao consegui montar a comparacao publica
+                              </h3>
+                              <p className="mt-3 text-sm leading-7 text-slate-300">
+                                {comparisonError}
+                              </p>
+                            </div>
                           </div>
                         </div>
-
-                        <textarea
-                          rows={5}
-                          value={caseSummary}
-                          onChange={(event) => setCaseSummary(event.target.value)}
-                          placeholder="Exemplo: fui demitido sem receber tudo, trabalhei sem registro por um periodo e tenho mensagens e comprovantes..."
-                          className="mt-5 w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-4 text-white placeholder-slate-500 outline-none focus:border-sky-400/50"
-                        />
-
-                        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                          <button
-                            onClick={handleCompareCases}
-                            disabled={comparisonLoading}
-                            className={`rounded-2xl px-6 py-3 font-semibold sm:min-w-[260px] ${
-                              comparisonLoading
-                                ? "bg-slate-800 text-slate-500 cursor-not-allowed"
-                                : "bg-gradient-to-r from-sky-500 to-blue-700 text-white"
-                            }`}
-                          >
-                            {comparisonLoading
-                              ? "Comparando..."
-                              : "Buscar casos comparaveis"}
-                          </button>
-                          <p className="text-xs leading-6 text-slate-500">
-                            A comparacao usa a base trabalhista do projeto.
-                            Quando a fonte direta nao estiver cadastrada, o card
-                            do caso mostra um link de pesquisa pelo numero do
-                            processo.
-                          </p>
-                        </div>
-
-                        {comparisonError ? (
-                          <p className="mt-4 text-sm text-red-300">{comparisonError}</p>
-                        ) : null}
-                      </div>
+                      ) : null}
 
                       <SimilarCases
                         cases={similarCases}
@@ -742,27 +710,10 @@ export default function Chat({ onNavigate }: ChatProps) {
                         comparison={comparison}
                         durationStats={durationStats}
                         title="Casos publicos comparaveis"
-                        subtitle="Comparacao baseada no seu resumo livre e na base trabalhista publica cadastrada no projeto."
+                        subtitle="Comparacao montada a partir do resumo que voce escreveu na triagem e das mensagens do fluxo trabalhista."
                       />
                     </>
-                  ) : (
-                    <div className="surface-card p-5 md:p-6">
-                      <div className="flex items-start gap-3">
-                        <AlertTriangle className="mt-1 h-5 w-5 flex-shrink-0 text-amber-300" />
-                        <div>
-                          <h3 className="text-xl font-bold text-white">
-                            Comparacao publica limitada por area
-                          </h3>
-                          <p className="mt-3 text-sm leading-7 text-slate-300">
-                            Para evitar falso parecido, a comparacao com casos
-                            publicos ficou restrita aos fluxos trabalhistas.
-                            Neste tema, use o proprio chat para aprofundar o
-                            caso ou leve para atendimento humano.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  ) : null}
                 </div>
               )}
             </div>

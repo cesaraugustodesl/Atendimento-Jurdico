@@ -1,12 +1,14 @@
-import { Mail, Phone, Shield, User } from "lucide-react";
+import { FileText, Mail, Phone, Shield, User } from "lucide-react";
 
 interface StepContactProps {
   name: string;
   whatsapp: string;
   email: string;
+  caseSummary: string;
   onNameChange: (value: string) => void;
   onWhatsappChange: (value: string) => void;
   onEmailChange: (value: string) => void;
+  onCaseSummaryChange: (value: string) => void;
   onSubmit: () => void;
   onBack: () => void;
   loading: boolean;
@@ -23,9 +25,11 @@ export default function StepContact({
   name,
   whatsapp,
   email,
+  caseSummary,
   onNameChange,
   onWhatsappChange,
   onEmailChange,
+  onCaseSummaryChange,
   onSubmit,
   onBack,
   loading,
@@ -36,15 +40,34 @@ export default function StepContact({
     <div className="space-y-6">
       <div>
         <h3 className="text-2xl font-bold text-white">
-          Falta pouco. Para quem devemos preparar o resultado?
+          Falta pouco. Conte o caso e diga para quem devemos preparar o resultado.
         </h3>
         <p className="mt-2 text-sm leading-7 text-slate-400">
-          Esses dados servem para identificar sua simulacao e facilitar o
-          proximo passo com atendimento humano, se voce quiser.
+          Seu relato entra junto na triagem. Os dados de contato servem para
+          identificar a simulacao e facilitar o proximo passo com atendimento
+          humano, se voce quiser.
         </p>
       </div>
 
       <div className="space-y-4">
+        <div>
+          <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-300">
+            <FileText className="w-4 h-4 text-sky-400" />
+            Resuma o que aconteceu
+          </label>
+          <textarea
+            rows={5}
+            value={caseSummary}
+            onChange={(e) => onCaseSummaryChange(e.target.value)}
+            placeholder="Exemplo: trabalhei por 4 anos, fazia horas extras quase todos os dias, fui demitido sem receber corretamente FGTS e verbas rescisorias..."
+            className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-4 text-white placeholder-slate-500 outline-none focus:border-sky-400/50"
+          />
+          <p className="mt-2 text-xs leading-6 text-slate-500">
+            Esse resumo entra junto na triagem e ajuda a comparar seu caso com
+            decisoes trabalhistas semelhantes.
+          </p>
+        </div>
+
         <div>
           <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-300">
             <User className="w-4 h-4 text-sky-400" />
