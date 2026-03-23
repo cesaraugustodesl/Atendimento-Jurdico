@@ -4,6 +4,8 @@ export type Page =
   | "areas"
   | "chat"
   | "contact"
+  | "client-area"
+  | "office-panel"
   | "terms"
   | "privacy"
   | "simulator"
@@ -34,12 +36,16 @@ export const siteConfig = {
     registry: "OAB/SP 000.000",
   },
   seo: {
-    siteUrl: "https://project-nu-one-39.vercel.app",
+    siteUrl: "https://atendimentojuridico.vercel.app",
     defaultTitle: "Atendimento Juridico Inteligente",
     defaultDescription:
       "Triagem juridica com IA, simuladores juridicos, contato humano e conteudo pratico para organizar seu caso e decidir o proximo passo.",
     defaultOgImage: "/og-cover.svg",
     defaultOgType: "website",
+  },
+  portal: {
+    clientAreaPath: "/area-do-cliente",
+    officePanelPath: "/painel-do-escritorio",
   },
 };
 
@@ -49,6 +55,8 @@ export const pageLabels: Record<Page, string> = {
   areas: "Areas de atuacao",
   chat: "Chat IA",
   contact: "Contato",
+  "client-area": "Area do Cliente",
+  "office-panel": "Painel do Escritorio",
   terms: "Termos de uso",
   privacy: "Politica de privacidade",
   simulator: "Simulador trabalhista",
@@ -62,6 +70,8 @@ export const pagePaths: Record<Page, string> = {
   areas: "/areas-de-atuacao",
   chat: "/chat-ia",
   contact: "/contato",
+  "client-area": siteConfig.portal.clientAreaPath,
+  "office-panel": siteConfig.portal.officePanelPath,
   terms: "/termos-de-uso",
   privacy: "/politica-de-privacidade",
   simulator: "/simulador-trabalhista",
@@ -94,6 +104,16 @@ export const corePageSeo: Record<Page, CorePageSeo> = {
     title: "Contato para analise juridica humana",
     description:
       "Leve seu caso para atendimento humano quando houver urgencia, necessidade de estrategia, revisao documental ou depois de passar pelo chat e pelos simuladores.",
+  },
+  "client-area": {
+    title: "Area do cliente para acompanhar caso, documentos e atualizacoes",
+    description:
+      "Acompanhe o caso, visualize a linha do tempo, confira documentos e receba avisos do escritorio em um painel protegido por acesso individual.",
+  },
+  "office-panel": {
+    title: "Painel interno do escritorio para acompanhar leads e casos",
+    description:
+      "Gerencie casos, acompanhe notificacoes e prepare a operacao do escritorio para portal do cliente, WhatsApp e monitoramento processual.",
   },
   terms: {
     title: "Termos de uso da plataforma juridica",
@@ -135,6 +155,7 @@ export const primaryNav: Array<{ id: Page; label: string; href: string }> = [
   { id: "simulators", label: "Simuladores", href: pagePaths.simulators },
   { id: "chat", label: "Chat IA", href: pagePaths.chat },
   { id: "areas", label: "Areas", href: pagePaths.areas },
+  { id: "client-area", label: "Area do Cliente", href: pagePaths["client-area"] },
   { id: "blog", label: "Blog", href: pagePaths.blog },
   { id: "contact", label: "Contato", href: pagePaths.contact },
 ];

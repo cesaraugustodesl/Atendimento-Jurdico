@@ -77,7 +77,7 @@ function buildRobots(allEntries) {
   const indexedHome = allEntries.find((entry) => entry.path === "/");
   const sitemapUrl = indexedHome
     ? `${indexedHome.seo.canonicalUrl.replace(/\/$/, "")}/sitemap.xml`
-    : "https://project-nu-one-39.vercel.app/sitemap.xml";
+    : "https://atendimentojuridico.vercel.app/sitemap.xml";
 
   return [
     "User-agent: *",

@@ -163,7 +163,11 @@ function getStaticPageDocument(page: Page): SeoDocument {
   const meta = corePageSeo[page];
   const canonicalPath = pagePaths[page];
   const breadcrumbs = getCoreBreadcrumbs(page);
-  const shouldIndex = page !== "terms" && page !== "privacy";
+  const shouldIndex =
+    page !== "terms" &&
+    page !== "privacy" &&
+    page !== "client-area" &&
+    page !== "office-panel";
 
   return {
     title: buildTitle(meta.title),
@@ -179,6 +183,25 @@ function getStaticPageDocument(page: Page): SeoDocument {
       getOrganizationSchema(),
       getBreadcrumbSchema(breadcrumbs),
     ],
+  };
+}
+
+function getClientCaseDocument(pathname: string): SeoDocument {
+  return {
+    title: buildTitle("Caso do cliente"),
+    description:
+      "Painel protegido para acompanhar andamento, documentos e notificacoes do caso.",
+    canonicalPath: pathname,
+    canonicalUrl: getAbsoluteUrl(pathname),
+    ogType: "website",
+    imageUrl: getAbsoluteUrl(siteConfig.seo.defaultOgImage),
+    robots: "noindex,nofollow",
+    breadcrumbs: [
+      { name: pageLabels.home, path: pagePaths.home },
+      { name: pageLabels["client-area"], path: pagePaths["client-area"] },
+      { name: "Caso do cliente", path: pathname },
+    ],
+    structuredData: [getWebsiteSchema(), getOrganizationSchema()],
   };
 }
 
@@ -298,6 +321,8 @@ export function getSeoDocument(route: ResolvedRoute): SeoDocument {
       return getServiceDocument(route.entry);
     case "blog-post":
       return getBlogPostDocument(route.entry);
+    case "client-case-detail":
+      return getClientCaseDocument(route.path);
     case "not-found":
       return getNotFoundDocument(route.path);
   }

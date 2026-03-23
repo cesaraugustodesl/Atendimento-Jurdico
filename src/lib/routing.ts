@@ -16,6 +16,7 @@ export type ResolvedRoute =
   | { kind: "service"; entry: ServicePage; path: string; navPage: Page }
   | { kind: "blog-index"; path: string; navPage: Page }
   | { kind: "blog-post"; entry: BlogPost; path: string; navPage: Page }
+  | { kind: "client-case-detail"; caseId: string; path: string; navPage: Page }
   | { kind: "not-found"; path: string };
 
 export const corePages = Object.keys(pagePaths) as Page[];
@@ -39,6 +40,19 @@ export function resolveRoute(pathname: string): ResolvedRoute {
       path,
       navPage: corePage === "simulator" ? "simulators" : corePage,
     };
+  }
+
+  if (path.startsWith(`${pagePaths["client-area"]}/casos/`)) {
+    const caseId = path.slice(`${pagePaths["client-area"]}/casos/`.length);
+
+    if (caseId) {
+      return {
+        kind: "client-case-detail",
+        caseId,
+        path,
+        navPage: "client-area",
+      };
+    }
   }
 
   const simulatorEntry = getSimulatorByPath(path);
@@ -103,6 +117,8 @@ export function getRouteLabel(route: ResolvedRoute) {
     case "service":
     case "blog-post":
       return route.entry.title;
+    case "client-case-detail":
+      return "Caso do cliente";
     case "not-found":
       return "Pagina nao encontrada";
   }

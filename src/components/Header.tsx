@@ -38,7 +38,7 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
             </div>
           </RouteLink>
 
-          <div className="hidden lg:flex items-center gap-5">
+          <div className="hidden lg:flex items-center gap-4 xl:gap-5">
             {primaryNav.map((item) => (
               <RouteLink
                 key={item.id}

@@ -8,6 +8,8 @@ import HowItWorks from "./pages/HowItWorks";
 import Areas from "./pages/Areas";
 import Chat from "./pages/Chat";
 import Contact from "./pages/Contact";
+import ClientPortal from "./pages/ClientPortal";
+import ClientCaseDetail from "./pages/ClientCaseDetail";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Blog from "./pages/Blog";
@@ -15,6 +17,7 @@ import ContentPage from "./pages/ContentPage";
 import NotFound from "./pages/NotFound";
 import Simulators from "./pages/Simulators";
 import SimulatorExperience from "./pages/SimulatorExperience";
+import OfficePanel from "./pages/OfficePanel";
 import { normalizePath } from "./config/site";
 import { getSimulatorBySlug } from "./lib/simulators/registry";
 import { getRouteLabel } from "./lib/routing";
@@ -108,6 +111,10 @@ function App({ initialPath }: AppProps) {
             return <Chat onNavigate={handleNavigate} />;
           case "contact":
             return <Contact onNavigate={handleNavigate} />;
+          case "client-area":
+            return <ClientPortal onNavigate={handleNavigate} />;
+          case "office-panel":
+            return <OfficePanel onNavigate={handleNavigate} />;
           case "terms":
             return <Terms />;
           case "privacy":
@@ -140,6 +147,8 @@ function App({ initialPath }: AppProps) {
         return <ContentPage entry={route.entry} kind="service" onNavigate={handleNavigate} />;
       case "blog-post":
         return <ContentPage entry={route.entry} kind="blog" onNavigate={handleNavigate} />;
+      case "client-case-detail":
+        return <ClientCaseDetail caseId={route.caseId} onNavigate={handleNavigate} />;
       case "not-found":
         return <NotFound onNavigate={handleNavigate} />;
     }
