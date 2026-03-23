@@ -1,15 +1,10 @@
 import { pagePaths } from "../../config/site";
-import {
-  computeResult as computeLaborResult,
-  type ContractType,
-  type Violations,
-} from "../../utils/laborCalculator";
-import type {
-  LeadClassification,
-  SimulatorDefinition,
-  SimulatorFormValues,
-  SimulatorOutcome,
-} from "./types";
+import { buildFgtsOutcome } from "./logic/fgts";
+import { buildLaborGeneralOutcome } from "./logic/laborGeneral";
+import { buildOvertimeOutcome } from "./logic/overtime";
+import { buildPixScamOutcome } from "./logic/pix";
+import { buildTerminationOutcome } from "./logic/termination";
+import type { SimulatorDefinition } from "./types";
 
 const yesNoOptions = [
   { value: "sim", label: "Sim" },
@@ -59,493 +54,6 @@ const laborViolationOptions = [
   },
 ];
 
-function toNumber(values: SimulatorFormValues, key: string) {
-  const value = values[key];
-  return typeof value === "number" && Number.isFinite(value) ? value : 0;
-}
-
-function toText(values: SimulatorFormValues, key: string) {
-  const value = values[key];
-  return typeof value === "string" ? value : "";
-}
-
-function toList(values: SimulatorFormValues, key: string) {
-  const value = values[key];
-  return Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === "string")
-    : [];
-}
-
-function clampScore(score: number) {
-  return Math.max(0, Math.min(100, Math.round(score)));
-}
-
-function classificationFromScore(score: number): LeadClassification {
-  if (score <= 34) {
-    return "baixa";
-  }
-
-  if (score <= 67) {
-    return "media";
-  }
-
-  return "alta";
-}
-
-function potentialLabel(classification: LeadClassification) {
-  if (classification === "alta") {
-    return "Potencial inicial alto";
-  }
-
-  if (classification === "media") {
-    return "Potencial inicial medio";
-  }
-
-  return "Potencial inicial baixo";
-}
-
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
-function asYes(value: string) {
-  return value === "sim";
-}
-
-function buildLaborViolations(selected: string[]): Violations {
-  return {
-    horasExtrasNaoPagas: selected.includes("horasExtrasNaoPagas"),
-    domingosFeriados: selected.includes("domingosFeriados"),
-    intervaloIrregular: selected.includes("intervaloIrregular"),
-    trabalhoNoturno: selected.includes("trabalhoNoturno"),
-    insalubridade: selected.includes("insalubridade"),
-    fgtsNaoPago: selected.includes("fgtsNaoPago"),
-    demissaoProblematica: selected.includes("demissaoProblematica"),
-    tempoMaisTresAnos: selected.includes("tempoMaisTresAnos"),
-  };
-}
-
-function buildWorkSummary(values: SimulatorFormValues) {
-  const salary = toNumber(values, "salary");
-  const yearsWorked = toNumber(values, "yearsWorked");
-  return `${yearsWorked} ano${yearsWorked === 1 ? "" : "s"} de contrato e salario aproximado de ${formatCurrency(
-    salary
-  )}`;
-}
-
-function computeLaborGeneral(values: SimulatorFormValues): SimulatorOutcome {
-  const contractType = (toText(values, "contractType") || "clt") as ContractType;
-  const salary = toNumber(values, "salary");
-  const yearsWorked = toNumber(values, "yearsWorked");
-  const selectedViolations = toList(values, "violations");
-  const violations = buildLaborViolations(selectedViolations);
-  const result = computeLaborResult({
-    contractType,
-    salary,
-    yearsWorked,
-    violations,
-    name: "",
-    whatsapp: "",
-    email: "",
-  });
-
-  return {
-    score: result.score,
-    classification: result.classification,
-    potentialLabel: potentialLabel(result.classification),
-    summary: `${result.contractInsight} Base informada: ${buildWorkSummary(values)}.`,
-    findings:
-      result.identifiedRights.length > 0
-        ? result.identifiedRights
-        : ["Nenhum sinal forte foi marcado na triagem trabalhista inicial."],
-    recommendations: [
-      "Separe carteira, holerites, extrato do FGTS, espelho de ponto e mensagens relevantes.",
-      "Compare o periodo trabalhado com os direitos efetivamente pagos para validar as teses.",
-      "Se houver prazo correndo apos o fim do contrato, priorize atendimento humano.",
-    ],
-    caution:
-      "A faixa abaixo e preliminar. Valor real depende de documentos, periodo exato e estrategia juridica.",
-    estimate: {
-      label: "Faixa estimada preliminar",
-      min: result.estimateMin,
-      max: result.estimateMax,
-      helper: "Leitura inicial baseada nos sinais informados no formulario.",
-    },
-    comparisonTags: selectedViolations,
-    whatsappSummary: `Triagem trabalhista geral com score ${result.score}/100 e sinais como ${result.identifiedRights
-      .slice(0, 3)
-      .join(", ") || "poucos indicios fortes"}.`,
-  };
-}
-
-function computeTermination(values: SimulatorFormValues): SimulatorOutcome {
-  const dismissalType = toText(values, "dismissalType");
-  const salary = toNumber(values, "salary");
-  const yearsWorked = toNumber(values, "yearsWorked");
-  const receivedAll = asYes(toText(values, "receivedAll"));
-  const noticePaid = asYes(toText(values, "noticePaid"));
-  const fgtsDeposited = asYes(toText(values, "fgtsDeposited"));
-  const multaPaid = asYes(toText(values, "multaPaid"));
-  const vacationPending = asYes(toText(values, "vacationPending"));
-  const thirteenthPending = asYes(toText(values, "thirteenthPending"));
-
-  const monthsWorked = Math.max(1, Math.round(yearsWorked * 12));
-  const fgtsBase = salary * 0.08 * monthsWorked;
-  let estimate = 0;
-  let score = 18;
-  const findings: string[] = [];
-  const comparisonTags: string[] = ["demissaoProblematica"];
-
-  if (!receivedAll) {
-    estimate += salary;
-    score += 18;
-    findings.push("Ha indicio de verbas rescisorias pendentes.");
-  }
-
-  if (!noticePaid && dismissalType !== "pedido-demissao") {
-    estimate += salary;
-    score += 10;
-    findings.push("Aviso previo pode nao ter sido pago corretamente.");
-  }
-
-  if (vacationPending) {
-    estimate += salary * 1.33;
-    score += 8;
-    findings.push("Ferias vencidas ou proporcionais podem estar em aberto.");
-  }
-
-  if (thirteenthPending) {
-    estimate += salary * 0.5;
-    score += 8;
-    findings.push("Ha sinal de 13o proporcional ou saldo nao quitado.");
-  }
-
-  if (!fgtsDeposited) {
-    estimate += fgtsBase;
-    score += 16;
-    comparisonTags.push("fgtsNaoPago");
-    findings.push("Depositos de FGTS parecem irregulares ou ausentes.");
-  }
-
-  if (!multaPaid && dismissalType !== "pedido-demissao") {
-    estimate += fgtsBase * 0.4;
-    score += 10;
-    findings.push("A multa de 40% do FGTS pode nao ter sido paga.");
-  }
-
-  if (yearsWorked >= 3) {
-    score += 6;
-    comparisonTags.push("tempoMaisTresAnos");
-  }
-
-  if (dismissalType === "sem-justa-causa") {
-    score += 8;
-  }
-
-  const finalScore = clampScore(score);
-  const classification = classificationFromScore(finalScore);
-
-  return {
-    score: finalScore,
-    classification,
-    potentialLabel: potentialLabel(classification),
-    summary: `A triagem indica uma rescisao com pontos de revisao em ${dismissalType.replace(
-      /-/g,
-      " "
-    )}, considerando ${buildWorkSummary(values)}.`,
-    findings:
-      findings.length > 0
-        ? findings
-        : ["Pelos dados informados, nao apareceu um indicio forte de diferenca rescisoria relevante."],
-    recommendations: [
-      "Reuna TRCT, comprovante de saque do FGTS, chave de conectividade e holerites finais.",
-      "Confira se saldo, aviso, ferias, 13o e FGTS foram pagos com a base salarial correta.",
-      "Se o desligamento foi recente, vale revisar rapidamente para nao perder prova e documentos.",
-    ],
-    caution:
-      "A estimativa abaixo e apenas orientativa. Rescisao depende de rubricas especificas e documentos do encerramento do contrato.",
-    estimate: {
-      label: "Faixa preliminar de diferencas rescisorias",
-      min: Math.round(estimate * 0.8),
-      max: Math.round(estimate * 1.2),
-      helper: "Faixa conservadora para orientar triagem, nao para prometer valor final.",
-    },
-    comparisonTags,
-    whatsappSummary: `Triagem de rescisao trabalhista com score ${finalScore}/100, foco em verbas rescisorias e faixa inicial de ${formatCurrency(
-      Math.round(estimate * 0.8)
-    )} a ${formatCurrency(Math.round(estimate * 1.2))}.`,
-  };
-}
-
-function computeOvertime(values: SimulatorFormValues): SimulatorOutcome {
-  const salary = toNumber(values, "salary");
-  const yearsWorked = toNumber(values, "yearsWorked");
-  const contractualHours = toNumber(values, "contractualHours");
-  const actualHours = toNumber(values, "actualHours");
-  const daysPerWeek = toNumber(values, "daysPerWeek");
-  const intervalRegular = asYes(toText(values, "intervalRegular"));
-  const sundayWork = asYes(toText(values, "sundayWork"));
-  const holidayWork = asYes(toText(values, "holidayWork"));
-  const nightWork = asYes(toText(values, "nightWork"));
-  const paidCorrectly = asYes(toText(values, "paidCorrectly"));
-
-  const hourlyRate = salary > 0 ? salary / 220 : 0;
-  const extraHoursPerDay = Math.max(actualHours - contractualHours, 0);
-  const monthlyExtraHours = extraHoursPerDay * Math.max(daysPerWeek, 1) * 4.3;
-  const monthsWorked = Math.max(1, Math.round(yearsWorked * 12));
-
-  let estimate = monthlyExtraHours * hourlyRate * 1.5 * monthsWorked;
-  let score = 20;
-  const findings: string[] = [];
-  const comparisonTags = ["horasExtrasNaoPagas"];
-
-  if (extraHoursPerDay > 0) {
-    score += 18;
-    findings.push(
-      `A jornada informada sugere cerca de ${Math.round(
-        monthlyExtraHours
-      )} horas extras por mes.`
-    );
-  }
-
-  if (!paidCorrectly) {
-    score += 18;
-    findings.push("Voce indicou que o pagamento das horas extras nao era correto.");
-  }
-
-  if (!intervalRegular) {
-    estimate += salary * 0.08 * monthsWorked;
-    score += 10;
-    comparisonTags.push("intervaloIrregular");
-    findings.push("O intervalo intrajornada pode gerar reflexos adicionais.");
-  }
-
-  if (sundayWork || holidayWork) {
-    estimate += salary * 0.06 * monthsWorked;
-    score += 10;
-    comparisonTags.push("domingosFeriados");
-    findings.push("Trabalho em domingos ou feriados sem compensacao aumenta a exposicao.");
-  }
-
-  if (nightWork) {
-    estimate += salary * 0.05 * monthsWorked;
-    score += 8;
-    comparisonTags.push("trabalhoNoturno");
-    findings.push("Ha indicio de adicional noturno e reflexos correlatos.");
-  }
-
-  if (yearsWorked >= 3) {
-    score += 6;
-    comparisonTags.push("tempoMaisTresAnos");
-  }
-
-  const finalScore = clampScore(score);
-  const classification = classificationFromScore(finalScore);
-
-  return {
-    score: finalScore,
-    classification,
-    potentialLabel: potentialLabel(classification),
-    summary: `A triagem aponta um quadro de jornada acima do contratado, com base em ${buildWorkSummary(
-      values
-    )}.`,
-    findings:
-      findings.length > 0
-        ? findings
-        : ["Pelas horas informadas, nao apareceu um excesso relevante de jornada nesta leitura inicial."],
-    recommendations: [
-      "Separe espelhos de ponto, mensagens, escalas, holerites e comprovantes de jornada real.",
-      "Anote horario medio de entrada, saida, intervalo e frequencia em domingos ou feriados.",
-      "Se a empresa pagava parte das horas, vale comparar rubricas e reflexos com o horario efetivo.",
-    ],
-    caution:
-      "Horas extras dependem de prova consistente de jornada. A faixa serve para triagem e nao substitui calculo tecnico.",
-    estimate: {
-      label: "Faixa preliminar de horas extras e reflexos",
-      min: Math.round(estimate * 0.75),
-      max: Math.round(estimate * 1.15),
-      helper: "Leitura prudente conforme jornada informada e adicionais possiveis.",
-    },
-    comparisonTags,
-    whatsappSummary: `Triagem de horas extras com score ${finalScore}/100 e faixa inicial de ${formatCurrency(
-      Math.round(estimate * 0.75)
-    )} a ${formatCurrency(Math.round(estimate * 1.15))}.`,
-  };
-}
-
-function computeFgts(values: SimulatorFormValues): SimulatorOutcome {
-  const salary = toNumber(values, "salary");
-  const monthsWorked = toNumber(values, "monthsWorked");
-  const checkedStatement = asYes(toText(values, "checkedStatement"));
-  const companyActive = asYes(toText(values, "companyActive"));
-  const employmentEnded = asYes(toText(values, "employmentEnded"));
-  const hasProof = asYes(toText(values, "hasProof"));
-  const absenceLevel = toText(values, "absenceLevel");
-
-  const ratioMap: Record<string, number> = {
-    alguns: 0.25,
-    muitos: 0.55,
-    quaseTodos: 0.9,
-  };
-
-  const missingRatio = ratioMap[absenceLevel] ?? 0.25;
-  let estimate = salary * 0.08 * Math.max(monthsWorked, 1) * missingRatio;
-  let score = 18;
-  const findings: string[] = [];
-  const comparisonTags = ["fgtsNaoPago"];
-
-  if (checkedStatement) {
-    score += 15;
-    findings.push("Voce ja conferiu o extrato, o que fortalece a triagem inicial.");
-  }
-
-  if (hasProof) {
-    score += 12;
-    findings.push("Ha indicacao de documentos para confrontar depositos com o contrato.");
-  }
-
-  if (absenceLevel === "muitos" || absenceLevel === "quaseTodos") {
-    score += 18;
-    findings.push("A suspeita envolve varios meses sem deposito regular de FGTS.");
-  }
-
-  if (employmentEnded) {
-    estimate += estimate * 0.4;
-    score += 10;
-    comparisonTags.push("demissaoProblematica");
-    findings.push("Como o contrato ja encerrou, pode haver reflexo adicional ligado a multa rescisoria.");
-  }
-
-  if (monthsWorked >= 36) {
-    score += 8;
-    comparisonTags.push("tempoMaisTresAnos");
-  }
-
-  if (!companyActive) {
-    score += 6;
-    findings.push("A situacao da empresa pode exigir mais rapidez na estrategia de cobranca.");
-  }
-
-  const finalScore = clampScore(score);
-  const classification = classificationFromScore(finalScore);
-
-  return {
-    score: finalScore,
-    classification,
-    potentialLabel: potentialLabel(classification),
-    summary: `A leitura inicial indica possivel irregularidade de FGTS em um contrato com cerca de ${monthsWorked} mes${
-      monthsWorked === 1 ? "" : "es"
-    } e salario medio de ${formatCurrency(salary)}.`,
-    findings:
-      findings.length > 0
-        ? findings
-        : ["A triagem indica suspeita inicial, mas ainda sem sinal forte de extensao da irregularidade."],
-    recommendations: [
-      "Separe extrato analitico do FGTS, holerites, contrato e comprovantes de desligamento, se houver.",
-      "Cruze meses sem deposito com o periodo efetivo do contrato para medir o tamanho da diferenca.",
-      "Se a empresa nao estiver mais ativa ou houver desligamento recente, vale acelerar a revisao do caso.",
-    ],
-    caution:
-      "Essa faixa e preliminar e depende do extrato detalhado do FGTS para validacao do numero exato.",
-    estimate: {
-      label: "Faixa preliminar de FGTS possivelmente nao depositado",
-      min: Math.round(estimate * 0.85),
-      max: Math.round(estimate * 1.15),
-      helper: "Pode incluir reflexos rescisorios quando o contrato ja terminou.",
-    },
-    comparisonTags,
-    whatsappSummary: `Triagem de FGTS com score ${finalScore}/100 e indicio inicial de ${formatCurrency(
-      Math.round(estimate * 0.85)
-    )} a ${formatCurrency(Math.round(estimate * 1.15))} em valores possivelmente nao depositados.`,
-  };
-}
-
-function computePix(values: SimulatorFormValues): SimulatorOutcome {
-  const amount = toNumber(values, "amount");
-  const elapsed = toText(values, "elapsed");
-  const notifiedBank = asYes(toText(values, "notifiedBank"));
-  const filedReport = asYes(toText(values, "filedReport"));
-  const hasProof = asYes(toText(values, "hasProof"));
-  const triedPlatform = asYes(toText(values, "triedPlatform"));
-  const knowsRecipient = asYes(toText(values, "knowsRecipient"));
-  const fraudType = toText(values, "fraudType");
-
-  let score = 12;
-  const findings: string[] = [];
-
-  if (elapsed === "ate24h") {
-    score += 24;
-    findings.push("A comunicacao rapida tende a melhorar a resposta inicial do caso.");
-  } else if (elapsed === "ate7dias") {
-    score += 14;
-    findings.push("O intervalo ainda e relativamente curto para triagem inicial.");
-  } else if (elapsed === "ate30dias") {
-    score += 6;
-  }
-
-  if (notifiedBank) {
-    score += 18;
-    findings.push("Voce informou que o banco foi avisado, o que e um passo importante.");
-  }
-
-  if (filedReport) {
-    score += 12;
-    findings.push("Boletim de ocorrencia ajuda a organizar a narrativa do caso.");
-  }
-
-  if (hasProof) {
-    score += 18;
-    findings.push("Existem comprovantes ou registros para sustentar a cronologia do golpe.");
-  }
-
-  if (triedPlatform || knowsRecipient) {
-    score += 8;
-    findings.push("Houve tentativa de rastrear ou contestar administrativamente a transferencia.");
-  }
-
-  if (amount >= 3000) {
-    score += 8;
-  }
-
-  const finalScore = clampScore(score);
-  const classification = classificationFromScore(finalScore);
-  const amountLabel = amount > 0 ? formatCurrency(amount) : "valor nao informado";
-
-  return {
-    score: finalScore,
-    classification,
-    potentialLabel:
-      classification === "alta"
-        ? "Potencial inicial relevante, com necessidade de agir rapido"
-        : potentialLabel(classification),
-    summary: `A triagem analisa um golpe via PIX no valor de ${amountLabel}, em um contexto de ${fraudType.replace(
-      /-/g,
-      " "
-    )}.`,
-    findings:
-      findings.length > 0
-        ? findings
-        : ["Sem comunicacao rapida ou prova relevante, o caso tende a exigir avaliacao mais cautelosa."],
-    recommendations: [
-      "Organize comprovante do PIX, conversas, protocolos, BO e resposta do banco.",
-      "Monte uma linha do tempo com horario do golpe, horario da comunicacao e canais acionados.",
-      "Se a comunicacao foi muito recente, priorize contato humano imediato para definir a estrategia.",
-    ],
-    caution:
-      "Golpe via PIX depende muito de tempo de comunicacao, provas e postura do banco. A triagem nao substitui analise individual.",
-    estimate: {
-      label: "Valor informado como prejuizo",
-      valueText: amountLabel,
-      helper: "Nao representa valor de recuperacao garantido, apenas o impacto economico narrado.",
-    },
-    whatsappSummary: `Triagem de golpe via PIX com score ${finalScore}/100 e prejuizo informado de ${amountLabel}.`,
-  };
-}
-
 export const simulatorRegistry: SimulatorDefinition[] = [
   {
     id: "labor-general",
@@ -553,28 +61,28 @@ export const simulatorRegistry: SimulatorDefinition[] = [
     path: pagePaths.simulator,
     name: "Simulador trabalhista",
     shortDescription:
-      "Triagem ampla para direitos trabalhistas nao pagos, com score, faixa inicial e comparacao publica.",
+      "Triagem ampla para direitos trabalhistas nao pagos, com encaminhamento para o simulador mais adequado.",
     longDescription:
-      "Use este simulador quando a pergunta central for se existem direitos trabalhistas nao pagos no contrato. Ele faz uma triagem geral antes da analise humana.",
-    heroTitle: "Use este fluxo quando a pergunta central for: existe direito trabalhista nao pago aqui?",
+      "Use este fluxo quando a pergunta central for se existem sinais trabalhistas relevantes e qual simulador especifico deve ser aberto em seguida.",
+    heroTitle: "Use este fluxo para descobrir qual simulador trabalhista faz mais sentido para o seu caso",
     heroDescription:
-      "O simulador organiza sinais de risco, gera uma faixa estimada e indica se faz sentido levar o caso para atendimento humano.",
+      "O simulador geral funciona como roteador inicial. Ele organiza os sinais do contrato e indica se o foco principal parece ser rescisao, horas extras, FGTS ou outro tema trabalhista.",
     area: "Trabalhista",
-    timeToComplete: "3 a 5 minutos",
-    eyebrow: "simulador trabalhista",
+    timeToComplete: "3 a 4 minutos",
+    eyebrow: "triagem trabalhista geral",
     introBullets: [
-      "Leitura inicial para contrato CLT, PJ com subordinacao ou trabalho sem registro.",
-      "Bom para quem ainda nao sabe qual tese trabalhista faz mais sentido.",
+      "Bom para quem ainda nao sabe qual tese trabalhista e a principal.",
+      "Ajuda a decidir entre rescisao, horas extras, FGTS ou atendimento humano.",
       "Pode cruzar o resumo com a base publica trabalhista do projeto.",
     ],
-    stepLabels: ["Contrato", "Emprego", "Sinais"],
-    seoTitle: "Simulador trabalhista para direitos nao pagos e triagem inicial",
+    stepLabels: ["Contrato", "Base", "Sinais"],
+    seoTitle: "Simulador trabalhista para triagem inicial e escolha do fluxo correto",
     seoDescription:
-      "Estime sinais de direitos trabalhistas nao pagos, organize contrato, jornada, FGTS e demissao e leve o caso para analise humana.",
+      "Entenda se o seu caso parece mais com rescisao, horas extras, FGTS ou outro tema trabalhista antes da analise humana.",
     initialValues: {
       contractType: "",
-      salary: 0,
-      yearsWorked: 0,
+      salary: null,
+      yearsWorked: null,
       violations: [],
     },
     steps: [
@@ -602,8 +110,8 @@ export const simulatorRegistry: SimulatorDefinition[] = [
       },
       {
         id: "employment",
-        title: "Dados do contrato",
-        description: "Essas informacoes ajudam a estimar exposicao economica inicial.",
+        title: "Base do contrato",
+        description: "Essas informacoes ajudam a medir tamanho e prioridade do caso.",
         fields: [
           {
             id: "salary",
@@ -611,6 +119,7 @@ export const simulatorRegistry: SimulatorDefinition[] = [
             type: "currency",
             required: true,
             placeholder: "Ex: R$ 3.000",
+            min: 1,
           },
           {
             id: "yearsWorked",
@@ -642,7 +151,7 @@ export const simulatorRegistry: SimulatorDefinition[] = [
     comparisonTitle: "Casos publicos comparaveis",
     comparisonSubtitle:
       "Comparacao montada a partir do resumo informado no formulario e dos sinais trabalhistas marcados na triagem.",
-    computeResult: (values) => computeLaborGeneral(values),
+    computeResult: (values) => buildLaborGeneralOutcome(values),
   },
   {
     id: "termination",
@@ -650,40 +159,46 @@ export const simulatorRegistry: SimulatorDefinition[] = [
     path: "/simuladores/rescisao-trabalhista",
     name: "Simulador de rescisao trabalhista",
     shortDescription:
-      "Triagem focada em verbas rescisorias, aviso previo, FGTS e multa de 40%.",
+      "Triagem focada em verbas rescisorias, aviso previo, FGTS e multa rescisoria.",
     longDescription:
-      "Use este simulador quando a principal duvida for sobre rescisao, verbas pendentes e diferencas de encerramento do contrato.",
-    heroTitle: "Descubra se a sua rescisao pode ter verbas pendentes",
+      "Use este simulador quando a principal duvida for sobre desligamento, verbas pendentes, FGTS e componentes do encerramento do contrato.",
+    heroTitle: "Descubra se a sua rescisao pode ter verbas ou diferencas relevantes",
     heroDescription:
-      "Este fluxo faz uma leitura inicial sobre desligamento, verbas rescisorias, FGTS, aviso previo e outros itens do fim do contrato.",
+      "Este fluxo faz uma leitura inicial sobre saldo de salario, aviso previo, 13o, ferias, FGTS e multa rescisoria com regras simplificadas e cautelosas.",
     area: "Trabalhista",
-    timeToComplete: "3 minutos",
+    timeToComplete: "4 minutos",
     eyebrow: "rescisao trabalhista",
     introBullets: [
-      "Focado em desligamento e valores rescisorios possivelmente nao pagos.",
-      "Ajuda a separar o que pode compor a conta inicial.",
+      "Focado em desligamento e itens que costumam aparecer na conferencia rescisoria.",
+      "Usa conta simplificada para triagem, nao para substituir leitura de TRCT e extrato.",
       "Cruza o resumo com a base publica trabalhista quando fizer sentido.",
     ],
-    stepLabels: ["Desligamento", "Verbas"],
+    stepLabels: ["Desligamento", "Tempo", "Pagamentos"],
     seoTitle: "Simulador de rescisao trabalhista e verbas pendentes",
     seoDescription:
-      "Analise verbal rescisorias, FGTS, aviso previo e sinais de diferencas no encerramento do contrato de trabalho.",
+      "Analise saldo de salario, aviso previo, 13o, ferias, FGTS e multa rescisoria em uma triagem trabalhista inicial.",
     initialValues: {
       dismissalType: "",
-      salary: 0,
-      yearsWorked: 0,
-      receivedAll: "",
+      salary: null,
+      daysWorkedInMonth: null,
+      yearsWorked: null,
+      extraMonthsWorked: null,
+      monthsWorkedCurrentYear: null,
+      vacationOverduePeriods: null,
+      proportionalVacationMonths: null,
+      receivedSomeAmount: "",
       noticePaid: "",
       fgtsDeposited: "",
       multaPaid: "",
       vacationPending: "",
       thirteenthPending: "",
+      hasValueDoubts: "",
     },
     steps: [
       {
         id: "dismissal",
-        title: "Como foi o desligamento?",
-        description: "Comece pelo formato da demissao e pela base salarial do contrato.",
+        title: "Como esta ou ficou o desligamento?",
+        description: "Comece pelo tipo de saida, salario base e saldo do ultimo mes.",
         fields: [
           {
             id: "dismissalType",
@@ -695,6 +210,11 @@ export const simulatorRegistry: SimulatorDefinition[] = [
               { value: "justa-causa", label: "Com justa causa" },
               { value: "pedido-demissao", label: "Pedido de demissao" },
               { value: "acordo", label: "Acordo" },
+              {
+                value: "simulacao",
+                label: "Ainda nao sai / apenas simulacao",
+                description: "Cenario simplificado de saida sem justa causa para triagem.",
+              },
             ],
           },
           {
@@ -702,38 +222,133 @@ export const simulatorRegistry: SimulatorDefinition[] = [
             label: "Salario bruto mensal",
             type: "currency",
             required: true,
+            min: 1,
             placeholder: "Ex: R$ 4.200",
           },
           {
-            id: "yearsWorked",
-            label: "Tempo total na empresa (anos)",
+            id: "daysWorkedInMonth",
+            label: "Quantos dias voce trabalhou no mes da saida ou da simulacao?",
             type: "number",
             required: true,
-            min: 0.5,
-            step: 0.5,
-            placeholder: "Ex: 2.5",
+            min: 0,
+            max: 30,
+            step: 1,
           },
         ],
       },
       {
-        id: "termination-rights",
-        title: "O que faltou na rescisao?",
-        description: "Marque como foi o pagamento das principais verbas do encerramento.",
+        id: "contract-time",
+        title: "Qual era a base do contrato?",
+        description: "Agora informe o tempo de empresa e os meses usados nas verbas proporcionais.",
         fields: [
-          { id: "receivedAll", label: "Recebeu todas as verbas rescisorias?", type: "yesno", required: true, options: yesNoOptions },
-          { id: "noticePaid", label: "O aviso previo foi pago corretamente?", type: "yesno", required: true, options: yesNoOptions },
-          { id: "fgtsDeposited", label: "O FGTS parecia estar regular ate a demissao?", type: "yesno", required: true, options: yesNoOptions },
-          { id: "multaPaid", label: "A multa de 40% do FGTS foi paga?", type: "yesno", required: true, options: yesNoOptions },
-          { id: "vacationPending", label: "Havia ferias vencidas ou proporcionais nao quitadas?", type: "yesno", required: true, options: yesNoOptions },
-          { id: "thirteenthPending", label: "O 13o proporcional ficou pendente?", type: "yesno", required: true, options: yesNoOptions },
+          {
+            id: "yearsWorked",
+            label: "Anos completos de empresa",
+            type: "number",
+            required: true,
+            min: 0,
+            step: 1,
+          },
+          {
+            id: "extraMonthsWorked",
+            label: "Meses adicionais alem dos anos completos",
+            type: "number",
+            required: true,
+            min: 0,
+            max: 11,
+            step: 1,
+          },
+          {
+            id: "monthsWorkedCurrentYear",
+            label: "Quantos meses voce trabalhou no ano corrente?",
+            type: "number",
+            required: true,
+            min: 0,
+            max: 12,
+            step: 1,
+          },
+          {
+            id: "proportionalVacationMonths",
+            label: "Meses do periodo aquisitivo para ferias proporcionais",
+            type: "number",
+            required: true,
+            min: 0,
+            max: 11,
+            step: 1,
+          },
+          {
+            id: "vacationOverduePeriods",
+            label: "Quantos periodos de ferias vencidas existiam?",
+            type: "number",
+            required: true,
+            min: 0,
+            max: 5,
+            step: 1,
+          },
+        ],
+      },
+      {
+        id: "payments",
+        title: "O que foi pago ou ainda parece pendente?",
+        description: "Essas respostas ajudam a separar composicao teorica de possiveis diferencas praticas.",
+        fields: [
+          {
+            id: "receivedSomeAmount",
+            label: "Voce recebeu alguma verba rescisoria?",
+            type: "yesno",
+            required: true,
+            options: yesNoOptions,
+          },
+          {
+            id: "noticePaid",
+            label: "O aviso previo foi pago corretamente?",
+            type: "yesno",
+            required: true,
+            options: yesNoOptions,
+          },
+          {
+            id: "fgtsDeposited",
+            label: "O FGTS parecia estar regular ate o desligamento?",
+            type: "yesno",
+            required: true,
+            options: yesNoOptions,
+          },
+          {
+            id: "multaPaid",
+            label: "A multa rescisoria do FGTS foi paga quando cabia?",
+            type: "yesno",
+            required: true,
+            options: yesNoOptions,
+          },
+          {
+            id: "vacationPending",
+            label: "Voce suspeita de ferias vencidas ou proporcionais pendentes?",
+            type: "yesno",
+            required: true,
+            options: yesNoOptions,
+          },
+          {
+            id: "thirteenthPending",
+            label: "Voce suspeita de 13o proporcional pendente?",
+            type: "yesno",
+            required: true,
+            options: yesNoOptions,
+          },
+          {
+            id: "hasValueDoubts",
+            label: "Existe duvida sobre os valores pagos?",
+            type: "yesno",
+            required: true,
+            options: yesNoOptions,
+          },
         ],
       },
     ],
     supportsPublicCaseComparison: true,
     comparisonTitle: "Casos publicos de rescisao comparaveis",
     comparisonSubtitle:
-      "Comparacao baseada no resumo informado e nos sinais de verbas rescisorias, FGTS e demissao.",
-    computeResult: (values) => computeTermination(values),
+      "Comparacao baseada no resumo informado e nos sinais de verbas rescisorias, FGTS e desligamento.",
+    computeResult: (values) => buildTerminationOutcome(values),
   },
   {
     id: "overtime",
@@ -741,31 +356,32 @@ export const simulatorRegistry: SimulatorDefinition[] = [
     path: "/simuladores/horas-extras",
     name: "Simulador de horas extras",
     shortDescription:
-      "Triagem para jornada acima do contratado, reflexos, intervalo e trabalho em domingos, feriados e periodo noturno.",
+      "Triagem para jornada acima do contratado, intervalo irregular e adicionais de horario.",
     longDescription:
-      "Use este simulador quando a principal dor for jornada excessiva, horas extras nao pagas e adicionais relacionados ao horario de trabalho.",
+      "Use este simulador quando a principal dor for jornada excessiva, pagamento incorreto de horas extras e reflexos ligados a horario.",
     heroTitle: "Veja se sua jornada pode indicar horas extras nao pagas",
     heroDescription:
-      "Este fluxo compara horario contratado, horario real, intervalo e adicionais para medir o potencial inicial do caso.",
+      "Este fluxo compara a carga horaria contratual com a jornada real, mede intervalo e aponta adicionais possiveis de forma prudente.",
     area: "Trabalhista",
-    timeToComplete: "3 minutos",
+    timeToComplete: "3 a 4 minutos",
     eyebrow: "horas extras",
     introBullets: [
       "Focado em jornada real versus jornada contratada.",
-      "Considera intervalo, domingos, feriados e adicional noturno.",
+      "Considera intervalo, domingos, feriados e adicional noturno sem prometer calculo exato de tudo.",
       "Pode cruzar o resumo com a base publica trabalhista do projeto.",
     ],
-    stepLabels: ["Jornada", "Adicionais"],
+    stepLabels: ["Jornada", "Ritmo", "Adicionais"],
     seoTitle: "Simulador de horas extras e jornada de trabalho",
     seoDescription:
-      "Analise horas extras nao pagas, intervalo irregular, domingos, feriados e adicional noturno em uma triagem trabalhista inicial.",
+      "Analise horas extras, intervalo irregular, domingos, feriados e trabalho noturno em uma triagem trabalhista inicial.",
     initialValues: {
-      salary: 0,
-      yearsWorked: 0,
-      contractualHours: 8,
-      actualHours: 8,
-      daysPerWeek: 5,
-      intervalRegular: "",
+      salary: null,
+      weeklyContractHours: null,
+      actualHoursPerDay: null,
+      daysPerWeek: null,
+      monthsInPattern: null,
+      breakMinutes: null,
+      overtimeFrequency: "",
       sundayWork: "",
       holidayWork: "",
       nightWork: "",
@@ -773,27 +389,118 @@ export const simulatorRegistry: SimulatorDefinition[] = [
     },
     steps: [
       {
-        id: "hours",
-        title: "Como era sua jornada?",
-        description: "Informe a base salarial e a diferenca entre o horario contratado e o horario real.",
+        id: "journey",
+        title: "Como era a base da sua jornada?",
+        description: "Informe salario, carga semanal contratual e horario medio real.",
         fields: [
-          { id: "salary", label: "Salario bruto mensal", type: "currency", required: true, placeholder: "Ex: R$ 2.800" },
-          { id: "yearsWorked", label: "Tempo nesse ritmo de jornada (anos)", type: "number", required: true, min: 0.5, step: 0.5, placeholder: "Ex: 2" },
-          { id: "contractualHours", label: "Horas contratadas por dia", type: "number", required: true, min: 1, max: 12, step: 1 },
-          { id: "actualHours", label: "Horas reais trabalhadas por dia", type: "number", required: true, min: 1, max: 18, step: 1 },
-          { id: "daysPerWeek", label: "Dias trabalhados por semana", type: "number", required: true, min: 1, max: 7, step: 1 },
+          {
+            id: "salary",
+            label: "Salario bruto mensal",
+            type: "currency",
+            required: true,
+            min: 1,
+            placeholder: "Ex: R$ 2.800",
+          },
+          {
+            id: "weeklyContractHours",
+            label: "Carga horaria contratual semanal",
+            type: "number",
+            required: true,
+            min: 1,
+            max: 60,
+            step: 1,
+            helper: "Exemplo comum: 44 horas semanais.",
+          },
+          {
+            id: "actualHoursPerDay",
+            label: "Horas reais trabalhadas por dia",
+            type: "number",
+            required: true,
+            min: 0,
+            max: 18,
+            step: 0.5,
+          },
+          {
+            id: "daysPerWeek",
+            label: "Dias trabalhados por semana",
+            type: "number",
+            required: true,
+            min: 1,
+            max: 7,
+            step: 1,
+          },
         ],
       },
       {
-        id: "extras",
-        title: "Havia outros adicionais ou problemas de jornada?",
-        description: "Agora detalhe como era o pagamento e se existiam reflexos adicionais.",
+        id: "pattern",
+        title: "Com que frequencia isso acontecia?",
+        description: "Agora detalhe o periodo e o intervalo intrajornada real.",
         fields: [
-          { id: "intervalRegular", label: "O intervalo de almoco era regular?", type: "yesno", required: true, options: yesNoOptions },
-          { id: "sundayWork", label: "Trabalhava em domingos?", type: "yesno", required: true, options: yesNoOptions },
-          { id: "holidayWork", label: "Trabalhava em feriados?", type: "yesno", required: true, options: yesNoOptions },
-          { id: "nightWork", label: "Trabalhava apos as 22h?", type: "yesno", required: true, options: yesNoOptions },
-          { id: "paidCorrectly", label: "As horas extras eram pagas corretamente?", type: "yesno", required: true, options: yesNoOptions },
+          {
+            id: "monthsInPattern",
+            label: "Por quantos meses essa rotina aconteceu?",
+            type: "number",
+            required: true,
+            min: 1,
+            max: 120,
+            step: 1,
+          },
+          {
+            id: "breakMinutes",
+            label: "Quantos minutos de intervalo voce fazia em media?",
+            type: "number",
+            required: true,
+            min: 0,
+            max: 180,
+            step: 5,
+          },
+          {
+            id: "overtimeFrequency",
+            label: "Com que frequencia as horas extras aconteciam?",
+            type: "choice",
+            required: true,
+            options: [
+              { value: "eventual", label: "Eventual" },
+              { value: "1-2-semana", label: "1 a 2 vezes por semana" },
+              { value: "3-4-semana", label: "3 a 4 vezes por semana" },
+              { value: "quase-todos-dias", label: "Quase todos os dias" },
+            ],
+          },
+        ],
+      },
+      {
+        id: "additionals",
+        title: "Havia outros adicionais ou falhas de pagamento?",
+        description: "Esses itens nao entram todos no total principal, mas ajudam a medir potencial do caso.",
+        fields: [
+          {
+            id: "sundayWork",
+            label: "Trabalhava em domingos?",
+            type: "yesno",
+            required: true,
+            options: yesNoOptions,
+          },
+          {
+            id: "holidayWork",
+            label: "Trabalhava em feriados?",
+            type: "yesno",
+            required: true,
+            options: yesNoOptions,
+          },
+          {
+            id: "nightWork",
+            label: "Trabalhava apos as 22h?",
+            type: "yesno",
+            required: true,
+            options: yesNoOptions,
+          },
+          {
+            id: "paidCorrectly",
+            label: "As horas extras eram pagas corretamente?",
+            type: "yesno",
+            required: true,
+            options: yesNoOptions,
+          },
         ],
       },
     ],
@@ -801,7 +508,7 @@ export const simulatorRegistry: SimulatorDefinition[] = [
     comparisonTitle: "Casos publicos de jornada comparaveis",
     comparisonSubtitle:
       "Comparacao baseada no resumo informado e nos sinais de horas extras, intervalo e adicionais trabalhistas.",
-    computeResult: (values) => computeOvertime(values),
+    computeResult: (values) => buildOvertimeOutcome(values),
   },
   {
     id: "fgts",
@@ -809,7 +516,7 @@ export const simulatorRegistry: SimulatorDefinition[] = [
     path: "/simuladores/fgts-nao-depositado",
     name: "Simulador de FGTS nao depositado",
     shortDescription:
-      "Triagem para ausencia de depositos de FGTS, reflexos rescisorios e urgencia de cobranca.",
+      "Triagem para ausencia de depositos de FGTS, extensao da falha e confianca da prova.",
     longDescription:
       "Use este simulador quando a principal duvida for sobre falta de depositos de FGTS e necessidade de cobranca do valor nao recolhido.",
     heroTitle: "Descubra se o seu caso de FGTS nao depositado parece relevante",
@@ -819,17 +526,17 @@ export const simulatorRegistry: SimulatorDefinition[] = [
     timeToComplete: "2 a 3 minutos",
     eyebrow: "fgts nao depositado",
     introBullets: [
-      "Focado em meses sem deposito, extrato do FGTS e encerramento do contrato.",
-      "Ajuda a medir a exposicao economica inicial do caso.",
+      "Focado em meses sem deposito, extrato do FGTS e situacao atual do contrato.",
+      "Ajuda a medir a exposicao economica inicial do caso sem prometer valor exato.",
       "Pode comparar o resumo com a base publica trabalhista do projeto.",
     ],
-    stepLabels: ["Base do contrato", "Extrato e prova"],
+    stepLabels: ["Base", "Extrato e prova"],
     seoTitle: "Simulador de FGTS nao depositado e cobranca trabalhista",
     seoDescription:
       "Estime a relevancia de um caso de FGTS nao depositado e organize extrato, prova, encerramento do contrato e valor preliminar.",
     initialValues: {
-      salary: 0,
-      monthsWorked: 0,
+      salary: null,
+      monthsWorked: null,
       checkedStatement: "",
       absenceLevel: "",
       employmentEnded: "",
@@ -842,10 +549,37 @@ export const simulatorRegistry: SimulatorDefinition[] = [
         title: "Qual era a base do contrato?",
         description: "Informe salario, duracao do vinculo e situacao atual do contrato.",
         fields: [
-          { id: "salary", label: "Salario medio mensal", type: "currency", required: true, placeholder: "Ex: R$ 3.500" },
-          { id: "monthsWorked", label: "Quantos meses trabalhou nesse vinculo?", type: "number", required: true, min: 1, step: 1, placeholder: "Ex: 24" },
-          { id: "employmentEnded", label: "O contrato ja terminou?", type: "yesno", required: true, options: yesNoOptions },
-          { id: "companyActive", label: "A empresa ainda esta ativa?", type: "yesno", required: true, options: yesNoOptions },
+          {
+            id: "salary",
+            label: "Salario medio mensal",
+            type: "currency",
+            required: true,
+            min: 1,
+            placeholder: "Ex: R$ 3.500",
+          },
+          {
+            id: "monthsWorked",
+            label: "Quantos meses trabalhou nesse vinculo?",
+            type: "number",
+            required: true,
+            min: 1,
+            step: 1,
+            placeholder: "Ex: 24",
+          },
+          {
+            id: "employmentEnded",
+            label: "O contrato ja terminou?",
+            type: "yesno",
+            required: true,
+            options: yesNoOptions,
+          },
+          {
+            id: "companyActive",
+            label: "A empresa ainda esta ativa?",
+            type: "yesno",
+            required: true,
+            options: yesNoOptions,
+          },
         ],
       },
       {
@@ -853,7 +587,13 @@ export const simulatorRegistry: SimulatorDefinition[] = [
         title: "O que voce ja conseguiu confirmar?",
         description: "Aqui a triagem mede a confiabilidade da suspeita e o tamanho da falha.",
         fields: [
-          { id: "checkedStatement", label: "Voce ja conferiu o extrato do FGTS?", type: "yesno", required: true, options: yesNoOptions },
+          {
+            id: "checkedStatement",
+            label: "Voce ja conferiu o extrato do FGTS?",
+            type: "yesno",
+            required: true,
+            options: yesNoOptions,
+          },
           {
             id: "absenceLevel",
             label: "Qual parece ser a extensao da falta de depositos?",
@@ -865,7 +605,13 @@ export const simulatorRegistry: SimulatorDefinition[] = [
               { value: "quaseTodos", label: "Quase todo o periodo" },
             ],
           },
-          { id: "hasProof", label: "Voce tem holerites, contrato ou documentos para confrontar o extrato?", type: "yesno", required: true, options: yesNoOptions },
+          {
+            id: "hasProof",
+            label: "Voce tem holerites, contrato ou documentos para confrontar o extrato?",
+            type: "yesno",
+            required: true,
+            options: yesNoOptions,
+          },
         ],
       },
     ],
@@ -873,7 +619,7 @@ export const simulatorRegistry: SimulatorDefinition[] = [
     comparisonTitle: "Casos publicos de FGTS comparaveis",
     comparisonSubtitle:
       "Comparacao baseada no resumo informado e nos sinais de FGTS irregular cadastrados na base trabalhista.",
-    computeResult: (values) => computeFgts(values),
+    computeResult: (values) => buildFgtsOutcome(values),
   },
   {
     id: "pix-fraud",
@@ -886,7 +632,7 @@ export const simulatorRegistry: SimulatorDefinition[] = [
       "Use este simulador quando o problema envolver transferencia via PIX em contexto de golpe, engenharia social, falsa central ou fraude em conta.",
     heroTitle: "Veja se o seu caso de golpe via PIX pede acao rapida",
     heroDescription:
-      "Este fluxo organiza tempo do golpe, contato com o banco, provas e valor perdido para medir a prioridade inicial.",
+      "Este fluxo organiza tempo do golpe, contato com o banco, provas e valor perdido para medir a prioridade inicial sem prometer recuperacao.",
     area: "Consumidor / Bancario",
     timeToComplete: "2 a 3 minutos",
     eyebrow: "golpe via PIX",
@@ -900,14 +646,15 @@ export const simulatorRegistry: SimulatorDefinition[] = [
     seoDescription:
       "Avalie preliminarmente um golpe via PIX, o tempo de comunicacao ao banco, as provas disponiveis e a prioridade do caso.",
     initialValues: {
-      amount: 0,
+      amount: null,
       elapsed: "",
       fraudType: "",
       notifiedBank: "",
+      contactedPlatform: "",
+      formalResponse: "",
       filedReport: "",
       hasProof: "",
-      triedPlatform: "",
-      knowsRecipient: "",
+      hasConversationPrints: "",
     },
     steps: [
       {
@@ -915,7 +662,14 @@ export const simulatorRegistry: SimulatorDefinition[] = [
         title: "Como o golpe aconteceu?",
         description: "Comece pelo valor perdido, pelo tipo de fraude e pela rapidez da comunicacao.",
         fields: [
-          { id: "amount", label: "Valor perdido via PIX", type: "currency", required: true, placeholder: "Ex: R$ 4.800" },
+          {
+            id: "amount",
+            label: "Valor perdido via PIX",
+            type: "currency",
+            required: true,
+            min: 1,
+            placeholder: "Ex: R$ 4.800",
+          },
           {
             id: "fraudType",
             label: "Tipo principal de golpe",
@@ -926,6 +680,7 @@ export const simulatorRegistry: SimulatorDefinition[] = [
               { value: "conta-invadida", label: "Conta invadida ou dispositivo comprometido" },
               { value: "engenharia-social", label: "Engenharia social / urgencia / chantagem" },
               { value: "compra-falsa", label: "Compra ou anuncio falso" },
+              { value: "outro", label: "Outro" },
             ],
           },
           {
@@ -947,15 +702,52 @@ export const simulatorRegistry: SimulatorDefinition[] = [
         title: "Quais passos voce ja tomou?",
         description: "Agora a triagem mede documentacao, protocolo e consistencia do caso.",
         fields: [
-          { id: "notifiedBank", label: "O banco foi avisado formalmente?", type: "yesno", required: true, options: yesNoOptions },
-          { id: "filedReport", label: "Voce registrou boletim de ocorrencia?", type: "yesno", required: true, options: yesNoOptions },
-          { id: "hasProof", label: "Voce tem comprovantes, mensagens ou prints?", type: "yesno", required: true, options: yesNoOptions },
-          { id: "triedPlatform", label: "Voce tentou contestar ou abrir protocolo em canal oficial?", type: "yesno", required: true, options: yesNoOptions },
-          { id: "knowsRecipient", label: "Voce conseguiu identificar ou rastrear o destinatario?", type: "yesno", required: true, options: yesNoOptions },
+          {
+            id: "notifiedBank",
+            label: "O banco foi avisado formalmente?",
+            type: "yesno",
+            required: true,
+            options: yesNoOptions,
+          },
+          {
+            id: "contactedPlatform",
+            label: "Voce abriu protocolo em banco, app ou plataforma oficial?",
+            type: "yesno",
+            required: true,
+            options: yesNoOptions,
+          },
+          {
+            id: "formalResponse",
+            label: "Voce recebeu resposta formal do banco ou da plataforma?",
+            type: "yesno",
+            required: true,
+            options: yesNoOptions,
+          },
+          {
+            id: "filedReport",
+            label: "Voce registrou boletim de ocorrencia?",
+            type: "yesno",
+            required: true,
+            options: yesNoOptions,
+          },
+          {
+            id: "hasProof",
+            label: "Voce tem comprovantes da transferencia e protocolos?",
+            type: "yesno",
+            required: true,
+            options: yesNoOptions,
+          },
+          {
+            id: "hasConversationPrints",
+            label: "Voce tem prints de conversa, tela ou contato relacionado ao golpe?",
+            type: "yesno",
+            required: true,
+            options: yesNoOptions,
+          },
         ],
       },
     ],
-    computeResult: (values) => computePix(values),
+    computeResult: (values) => buildPixScamOutcome(values),
   },
 ];
 

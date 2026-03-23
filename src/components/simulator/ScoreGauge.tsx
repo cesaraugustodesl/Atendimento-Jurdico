@@ -8,19 +8,19 @@ interface ScoreGaugeProps {
 
 const CLASSIFICATION_CONFIG = {
   baixa: {
-    label: 'Baixa probabilidade',
+    label: 'Prioridade baixa',
     color: 'text-amber-400',
     gradient: 'from-amber-500 to-amber-600',
     track: 'text-amber-500',
   },
   media: {
-    label: 'Media probabilidade',
+    label: 'Prioridade media',
     color: 'text-blue-400',
     gradient: 'from-blue-500 to-blue-600',
     track: 'text-blue-500',
   },
   alta: {
-    label: 'Alta probabilidade',
+    label: 'Prioridade alta',
     color: 'text-emerald-400',
     gradient: 'from-emerald-500 to-emerald-600',
     track: 'text-emerald-500',

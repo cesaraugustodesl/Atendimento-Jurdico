@@ -86,7 +86,7 @@ export default function ResultsPanel({
   const whatsappMessage = [
     `Ola, acabei de concluir o ${simulator.name}.`,
     "",
-    `Score: ${result.score}/100 (${result.classification})`,
+    `Score: ${result.score}/100 (${result.leadPriority})`,
     `Resumo: ${result.whatsappSummary}`,
     "",
     "Gostaria de falar com a equipe sobre meu caso.",
@@ -104,7 +104,7 @@ export default function ResultsPanel({
             <p className="mt-4 text-sm leading-7">{result.summary}</p>
           </div>
           <div className="rounded-3xl border border-white/10 bg-slate-950/70 p-6">
-            <ScoreGauge score={result.score} classification={result.classification} />
+            <ScoreGauge score={result.score} classification={result.leadPriority} />
           </div>
         </div>
       </div>
@@ -122,6 +122,30 @@ export default function ResultsPanel({
             proximo passo, nao para substituir analise juridica individualizada.
           </p>
           <div className="mt-6">{renderEstimate(result)}</div>
+          {result.urgencyLevel || result.documentationStrength || result.claimPotential ? (
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              {result.urgencyLevel ? (
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                  <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Urgencia</p>
+                  <p className="mt-2 text-sm font-semibold text-white">{result.urgencyLevel}</p>
+                </div>
+              ) : null}
+              {result.documentationStrength ? (
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                  <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Documentacao</p>
+                  <p className="mt-2 text-sm font-semibold text-white">
+                    {result.documentationStrength}
+                  </p>
+                </div>
+              ) : null}
+              {result.claimPotential ? (
+                <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                  <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Potencial</p>
+                  <p className="mt-2 text-sm font-semibold text-white">{result.claimPotential}</p>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
           {result.estimate?.helper ? (
             <p className="mt-3 text-xs leading-6 text-slate-500">
               {result.estimate.helper}
@@ -142,6 +166,13 @@ export default function ResultsPanel({
               </p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <p className="text-sm font-semibold text-white">Confianca da triagem</p>
+              <p className="mt-2 text-sm leading-6">
+                {result.confidenceScore}/100. Quanto mais objetiva a resposta e melhor a base
+                informada, maior a confianca da leitura inicial.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
               <p className="text-sm font-semibold text-white">Conclusao pratica</p>
               <p className="mt-2 text-sm leading-6">
                 O objetivo aqui e organizar o caso, separar prova e decidir se vale
@@ -159,6 +190,42 @@ export default function ResultsPanel({
         </div>
       </div>
 
+      {result.breakdown && result.breakdown.length > 0 ? (
+        <div className="surface-card p-6">
+          <div className="flex items-center gap-3">
+            <TrendingUp className="h-6 w-6 text-emerald-400" />
+            <h2 className="text-xl font-bold">Breakdown preliminar</h2>
+          </div>
+          <div className="mt-5 grid gap-3 md:grid-cols-2">
+            {result.breakdown.map((item) => (
+              <div
+                key={item.key}
+                className="rounded-2xl border border-white/10 bg-white/5 p-4"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-white">{item.label}</p>
+                    {item.helper ? (
+                      <p className="mt-2 text-xs leading-6 text-slate-400">{item.helper}</p>
+                    ) : null}
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-bold text-emerald-400">
+                      {typeof item.amount === "number"
+                        ? formatCurrency(item.amount)
+                        : item.valueText ?? "Informativo"}
+                    </p>
+                    <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                      {item.includedInEstimate ? "entra na faixa" : "referencia"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       {result.findings.length > 0 ? (
         <div className="surface-card p-6">
           <div className="flex items-center gap-3">
@@ -172,6 +239,25 @@ export default function ResultsPanel({
                 className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300"
               >
                 {finding}
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {result.observations.length > 0 ? (
+        <div className="surface-card p-6">
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="h-6 w-6 text-amber-300" />
+            <h2 className="text-xl font-bold">Observacoes de leitura</h2>
+          </div>
+          <div className="mt-5 space-y-3">
+            {result.observations.map((item) => (
+              <div
+                key={item}
+                className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm leading-7 text-slate-300"
+              >
+                {item}
               </div>
             ))}
           </div>
@@ -193,6 +279,24 @@ export default function ResultsPanel({
                 {item}
               </div>
             ))}
+          </div>
+        </div>
+      ) : null}
+
+      {result.disclaimers.length > 0 ? (
+        <div className="surface-panel p-6">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-1 h-5 w-5 flex-shrink-0 text-amber-300" />
+            <div className="w-full">
+              <p className="text-sm font-semibold text-amber-200">Disclaimers e cautelas</p>
+              <div className="mt-3 space-y-2">
+                {result.disclaimers.map((item) => (
+                  <p key={item} className="text-sm leading-7 text-slate-300">
+                    {item}
+                  </p>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       ) : null}

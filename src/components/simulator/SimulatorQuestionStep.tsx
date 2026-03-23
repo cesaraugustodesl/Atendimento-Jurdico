@@ -25,14 +25,26 @@ function isFieldComplete(field: SimulatorField, value: SimulatorValue | undefine
   }
 
   if (field.type === "currency" || field.type === "number") {
-    return typeof value === "number" && value > 0;
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+      return false;
+    }
+
+    if (typeof field.min === "number" && value < field.min) {
+      return false;
+    }
+
+    if (typeof field.max === "number" && value > field.max) {
+      return false;
+    }
+
+    return true;
   }
 
   return typeof value === "string" && value.trim().length > 0;
 }
 
 function formatCurrency(value: number) {
-  if (!value) {
+  if (!Number.isFinite(value) || value <= 0) {
     return "";
   }
 
@@ -77,6 +89,7 @@ export default function SimulatorQuestionStep({
                     const isSelected = value === option.value;
                     return (
                       <button
+                        type="button"
                         key={option.value}
                         onClick={() => onChange(field.id, option.value)}
                         className={`rounded-2xl border px-4 py-4 text-left text-sm transition-colors ${
@@ -110,6 +123,7 @@ export default function SimulatorQuestionStep({
                     const isSelected = value === option.value;
                     return (
                       <button
+                        type="button"
                         key={option.value}
                         onClick={() => onChange(field.id, option.value)}
                         className={`rounded-2xl border px-4 py-4 text-center text-sm font-semibold transition-colors ${
@@ -140,6 +154,7 @@ export default function SimulatorQuestionStep({
                     const isSelected = selectedValues.includes(option.value);
                     return (
                       <button
+                        type="button"
                         key={option.value}
                         onClick={() =>
                           onChange(
@@ -181,7 +196,7 @@ export default function SimulatorQuestionStep({
           }
 
           if (field.type === "currency") {
-            const numericValue = typeof value === "number" ? value : 0;
+            const numericValue = typeof value === "number" ? value : null;
 
             return (
               <div key={field.id}>
@@ -191,9 +206,14 @@ export default function SimulatorQuestionStep({
                 <input
                   type="text"
                   inputMode="numeric"
-                  value={formatCurrency(numericValue)}
+                  value={numericValue === null ? "" : formatCurrency(numericValue)}
                   onChange={(event) =>
-                    onChange(field.id, Number(event.target.value.replace(/\D/g, "")))
+                    onChange(
+                      field.id,
+                      event.target.value.replace(/\D/g, "").length > 0
+                        ? Number(event.target.value.replace(/\D/g, ""))
+                        : null
+                    )
                   }
                   placeholder={field.placeholder}
                   className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-4 text-white placeholder-slate-500 outline-none focus:border-sky-400/50"
@@ -206,7 +226,7 @@ export default function SimulatorQuestionStep({
           }
 
           if (field.type === "number") {
-            const numericValue = typeof value === "number" ? value : 0;
+            const numericValue = typeof value === "number" ? value : null;
 
             return (
               <div key={field.id}>
@@ -215,12 +235,15 @@ export default function SimulatorQuestionStep({
                 </label>
                 <input
                   type="number"
-                  value={numericValue || ""}
+                  value={numericValue ?? ""}
                   min={field.min}
                   max={field.max}
                   step={field.step ?? 1}
                   onChange={(event) =>
-                    onChange(field.id, Number(event.target.value || 0))
+                    onChange(
+                      field.id,
+                      event.target.value.length > 0 ? Number(event.target.value) : null
+                    )
                   }
                   placeholder={field.placeholder}
                   className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-4 text-white placeholder-slate-500 outline-none focus:border-sky-400/50"
@@ -254,12 +277,13 @@ export default function SimulatorQuestionStep({
 
       <div className="flex gap-3">
         {!isFirstStep ? (
-          <button onClick={onBack} className="btn-secondary flex-1">
+          <button type="button" onClick={onBack} className="btn-secondary flex-1">
             <ArrowLeft className="h-4 w-4" />
             Voltar
           </button>
         ) : null}
         <button
+          type="button"
           onClick={onNext}
           disabled={!canAdvance}
           className={`flex-1 rounded-2xl px-6 py-4 font-semibold ${

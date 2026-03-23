@@ -1,4 +1,5 @@
 export type LeadClassification = "baixa" | "media" | "alta";
+export type PotentialLevel = "baixo" | "medio" | "alto";
 
 export type SimulatorFieldType =
   | "choice"
@@ -34,7 +35,7 @@ export interface SimulatorStepDefinition {
   fields: SimulatorField[];
 }
 
-export type SimulatorValue = string | number | string[];
+export type SimulatorValue = string | number | string[] | null;
 export type SimulatorFormValues = Record<string, SimulatorValue>;
 
 export interface SimulatorEstimate {
@@ -45,17 +46,54 @@ export interface SimulatorEstimate {
   helper?: string;
 }
 
-export interface SimulatorOutcome {
+export interface SimulatorBreakdownItem {
+  key: string;
+  label: string;
+  amount?: number;
+  valueText?: string;
+  helper?: string;
+  includedInEstimate?: boolean;
+}
+
+export interface LeadScoreResult {
   score: number;
   classification: LeadClassification;
+  leadPriority: LeadClassification;
+  confidenceScore: number;
+  potentialLevel: PotentialLevel;
   potentialLabel: string;
+}
+
+export interface BaseSimulatorResult extends LeadScoreResult {
+  simulatorSlug: string;
+  calculatedAt: string;
   summary: string;
   findings: string[];
+  observations: string[];
   recommendations: string[];
+  disclaimers: string[];
   caution?: string;
-  estimate?: SimulatorEstimate;
   comparisonTags?: string[];
   whatsappSummary: string;
+  scoreDetails?: Record<string, number>;
+  meta?: Record<string, string | number | boolean | null>;
+}
+
+export interface MonetaryEstimateResult extends BaseSimulatorResult {
+  totalEstimated?: number;
+  estimate?: SimulatorEstimate;
+  breakdown?: SimulatorBreakdownItem[];
+}
+
+export interface TriageResult extends BaseSimulatorResult {
+  urgencyLevel?: string;
+  documentationStrength?: string;
+  claimPotential?: string;
+  recommendedNextStep?: string;
+}
+
+export interface SimulatorOutcome extends MonetaryEstimateResult, TriageResult {
+  potentialLabel: string;
 }
 
 export interface SimulatorDefinition {

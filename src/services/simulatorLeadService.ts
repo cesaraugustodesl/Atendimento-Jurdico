@@ -74,7 +74,7 @@ export async function saveSimulatorLead({
     respostas_json: values,
     resultado_json: result,
     lead_score: result.score,
-    lead_priority: result.classification,
+    lead_priority: result.leadPriority,
     origem:
       typeof window !== "undefined" ? window.location.pathname : simulator.path,
     page_url:
