@@ -151,7 +151,10 @@ export default function OfficePanel({ onNavigate }: OfficePanelProps) {
       setError("");
       setNotice("");
 
-      const { error: linkError } = await sendPortalMagicLink(email);
+      const { error: linkError } = await sendPortalMagicLink(
+        email,
+        pagePaths["office-panel"]
+      );
       if (linkError) {
         throw linkError;
       }

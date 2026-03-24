@@ -137,7 +137,10 @@ export default function ClientPortal({ onNavigate }: ClientPortalProps) {
       setNotice("");
       setError("");
 
-      const { error: linkError } = await sendPortalMagicLink(email);
+      const { error: linkError } = await sendPortalMagicLink(
+        email,
+        pagePaths["client-area"]
+      );
 
       if (linkError) {
         throw linkError;

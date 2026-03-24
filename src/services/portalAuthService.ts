@@ -2,22 +2,23 @@ import type { Session } from "@supabase/supabase-js";
 import { pagePaths } from "../config/site";
 import { supabase } from "../lib/supabase";
 
-function getPortalRedirectUrl() {
+function getPortalRedirectUrl(targetPath: string) {
   if (typeof window === "undefined") {
     return undefined;
   }
 
-  return (
-    import.meta.env.VITE_PORTAL_REDIRECT_URL ||
-    `${window.location.origin}${pagePaths["client-area"]}`
-  );
+  const baseUrl = import.meta.env.VITE_PORTAL_REDIRECT_URL || window.location.origin;
+  return `${baseUrl.replace(/\/$/, "")}${targetPath}`;
 }
 
-export async function sendPortalMagicLink(email: string) {
+export async function sendPortalMagicLink(
+  email: string,
+  targetPath: string = pagePaths["client-area"]
+) {
   return supabase.auth.signInWithOtp({
     email: email.trim().toLowerCase(),
     options: {
-      emailRedirectTo: getPortalRedirectUrl(),
+      emailRedirectTo: getPortalRedirectUrl(targetPath),
     },
   });
 }
