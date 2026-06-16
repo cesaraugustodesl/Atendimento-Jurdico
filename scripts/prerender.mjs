@@ -77,7 +77,7 @@ function buildRobots(allEntries) {
   const indexedHome = allEntries.find((entry) => entry.path === "/");
   const sitemapUrl = indexedHome
     ? `${indexedHome.seo.canonicalUrl.replace(/\/$/, "")}/sitemap.xml`
-    : "https://atendimentojuridico.vercel.app/sitemap.xml";
+    : "https://www.pereiraemonteiroadvogados.com.br/sitemap.xml";
 
   return [
     "User-agent: *",

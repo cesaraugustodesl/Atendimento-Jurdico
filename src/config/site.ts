@@ -52,7 +52,7 @@ export const siteConfig = {
     registry: "OAB/SP 000.000",
   },
   seo: {
-    siteUrl: "https://atendimentojuridico.vercel.app",
+    siteUrl: "https://www.pereiraemonteiroadvogados.com.br",
     defaultTitle: "Perreira e Monteiro Advogados",
     defaultDescription:
       "Triagem juridica com IA, simuladores juridicos, contato humano e conteudo pratico para organizar seu caso e decidir o proximo passo.",
