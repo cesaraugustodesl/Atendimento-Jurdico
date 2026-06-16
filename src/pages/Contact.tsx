@@ -382,10 +382,12 @@ export default function Contact({ onNavigate }: ContactProps) {
               <div className="surface-card p-7 md:p-8">
                 <span className="eyebrow">informacoes de contato</span>
                 <div className="mt-6 space-y-5 text-sm text-slate-300">
-                  <div className="flex items-start gap-3">
-                    <MapPin className="mt-1 h-5 w-5 flex-shrink-0 text-sky-400" />
-                    <span>{siteConfig.contact.addressFull}</span>
-                  </div>
+                  {siteConfig.contact.addressFull ? (
+                    <div className="flex items-start gap-3">
+                      <MapPin className="mt-1 h-5 w-5 flex-shrink-0 text-sky-400" />
+                      <span>{siteConfig.contact.addressFull}</span>
+                    </div>
+                  ) : null}
                   {siteConfig.contact.people.map((person) => (
                     <div
                       key={person.email}

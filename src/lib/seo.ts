@@ -45,23 +45,28 @@ function getContentBreadcrumbs(entry: ContentBase, sectionLabel: string): Breadc
 }
 
 function getOrganizationSchema() {
-  return {
+  const schema: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "LegalService",
     name: siteConfig.brand.name,
     url: siteConfig.seo.siteUrl,
     telephone: siteConfig.contact.phoneDisplay,
     email: siteConfig.contact.email,
-    address: {
+    areaServed: "BR",
+    openingHours: siteConfig.contact.officeHours,
+  };
+
+  if (siteConfig.contact.addressLine1) {
+    schema.address = {
       "@type": "PostalAddress",
       streetAddress: siteConfig.contact.addressLine1,
       addressLocality: "Sao Paulo",
       addressRegion: "SP",
       addressCountry: "BR",
-    },
-    areaServed: "BR",
-    openingHours: siteConfig.contact.officeHours,
-  };
+    };
+  }
+
+  return schema;
 }
 
 function getWebsiteSchema() {
