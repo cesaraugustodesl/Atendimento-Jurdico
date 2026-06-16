@@ -2,7 +2,9 @@ import {
   Activity,
   ArrowRight,
   Briefcase,
+  Building2,
   FileText,
+  Gavel,
   Heart,
   ShoppingCart,
   Smartphone,
@@ -79,6 +81,28 @@ const areas = [
       "golpe via PIX",
       "compra nao reconhecida",
       "conta hackeada",
+    ],
+  },
+  {
+    icon: Building2,
+    title: "Direito condominial",
+    description:
+      "Taxas, multas, assembleias, obras, barulho, uso de areas comuns e conflitos com sindico ou administradora.",
+    examples: [
+      "multa condominial",
+      "vazamento ou obra",
+      "conflito com sindico",
+    ],
+  },
+  {
+    icon: Gavel,
+    title: "Direito criminal",
+    description:
+      "Triagem inicial para intimacoes, boletins de ocorrencia, audiencia, medidas urgentes e orientacao para vitimas ou investigados.",
+    examples: [
+      "intimacao policial",
+      "audiencia marcada",
+      "vitima de ameaca",
     ],
   },
 ];

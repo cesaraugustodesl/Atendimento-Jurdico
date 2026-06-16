@@ -3,10 +3,12 @@ import {
   AlertTriangle,
   ArrowLeft,
   ArrowRight,
+  Building2,
   Calendar,
   CheckCircle2,
   Clipboard,
   FileText,
+  Gavel,
   Heart,
   MessageSquare,
   Send,
@@ -52,6 +54,8 @@ const quickSuggestions = [
   { icon: Stethoscope, text: "Plano de saúde", accent: "border-emerald-400/20 bg-emerald-500/10" },
   { icon: Smartphone, text: "Golpe ou fraude", accent: "border-violet-400/20 bg-violet-500/10" },
   { icon: FileText, text: "Problema com contrato", accent: "border-slate-300/20 bg-white/5" },
+  { icon: Building2, text: "Direito condominial", accent: "border-cyan-400/20 bg-cyan-500/10" },
+  { icon: Gavel, text: "Direito criminal", accent: "border-red-400/20 bg-red-500/10" },
 ];
 
 const categoryTagMap: Record<string, string[]> = {
@@ -66,6 +70,8 @@ const categoryTagMap: Record<string, string[]> = {
   plano_saude: [],
   golpe: [],
   contrato: [],
+  condominial: [],
+  criminal: [],
 };
 
 function normalizeText(value: string) {
@@ -482,14 +488,14 @@ export default function Chat({ onNavigate }: ChatProps) {
                       evita resposta generica demais.
                     </p>
                   </div>
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-4 sm:grid-cols-2">
                     {quickSuggestions.map((suggestion) => {
                       const Icon = suggestion.icon;
                       return (
                         <button
                           key={suggestion.text}
                           onClick={() => handleCategorySelect(suggestion.text)}
-                          className={`rounded-3xl border p-5 text-left transition-transform hover:-translate-y-1 ${suggestion.accent}`}
+                          className={`rounded-3xl border p-4 text-left transition-transform hover:-translate-y-1 sm:p-5 ${suggestion.accent}`}
                         >
                           <Icon className="h-6 w-6 text-white" />
                           <p className="mt-5 text-base font-semibold text-white">

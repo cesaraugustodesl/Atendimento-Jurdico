@@ -290,6 +290,101 @@ export const categoryQuestions: Record<string, CategoryQuestions> = {
         required: true
       }
     ]
+  },
+  'condominial': {
+    category: 'Direito condominial',
+    icon: 'predio',
+    questions: [
+      {
+        id: 'tipo_problema',
+        text: 'Qual e o principal problema no condominio?',
+        type: 'choice',
+        options: [
+          'Cobranca de taxa condominial',
+          'Barulho, uso de area comum ou perturbacao',
+          'Obra, vazamento ou manutencao',
+          'Multa ou advertencia',
+          'Conflito com sindico ou administradora',
+          'Outro problema condominial'
+        ],
+        required: true
+      },
+      {
+        id: 'papel',
+        text: 'Voce esta falando como:',
+        type: 'choice',
+        options: [
+          'Morador/proprietario',
+          'Inquilino',
+          'Sindico',
+          'Administradora',
+          'Outro'
+        ],
+        required: true
+      },
+      {
+        id: 'documentos',
+        text: 'Existe notificacao, ata, convencao, boleto, multa ou conversa por escrito?',
+        type: 'yesno',
+        required: true
+      },
+      {
+        id: 'urgente',
+        text: 'Existe risco imediato, dano aumentando ou prazo para resposta?',
+        type: 'yesno',
+        required: true
+      },
+      {
+        id: 'detalhes',
+        text: 'Explique a situacao condominial (com suas palavras):',
+        type: 'text',
+        required: true
+      }
+    ]
+  },
+  'criminal': {
+    category: 'Direito criminal',
+    icon: 'martelo',
+    questions: [
+      {
+        id: 'situacao',
+        text: 'Qual situacao melhor descreve o caso?',
+        type: 'choice',
+        options: [
+          'Fui intimado ou chamado na delegacia',
+          'Tenho audiencia ou processo em andamento',
+          'Fui vitima e quero orientacao',
+          'Houve prisao, flagrante ou medida cautelar',
+          'Preciso registrar ou acompanhar B.O.',
+          'Outro assunto criminal'
+        ],
+        required: true
+      },
+      {
+        id: 'prazo',
+        text: 'Existe prazo, audiencia marcada, intimacao ou pessoa presa?',
+        type: 'yesno',
+        required: true
+      },
+      {
+        id: 'documentos',
+        text: 'Voce tem B.O., intimacao, termo, decisao ou numero do processo?',
+        type: 'yesno',
+        required: true
+      },
+      {
+        id: 'risco',
+        text: 'Existe risco atual de violencia, ameaca ou nova abordagem policial?',
+        type: 'yesno',
+        required: true
+      },
+      {
+        id: 'detalhes',
+        text: 'Conte o que aconteceu, sem incluir dados de terceiros alem do necessario:',
+        type: 'text',
+        required: true
+      }
+    ]
   }
 };
 
@@ -300,7 +395,9 @@ export function getCategoryKey(text: string): string {
     'Pensão alimentícia': 'pensao',
     'Plano de saúde': 'plano_saude',
     'Golpe ou fraude': 'golpe',
-    'Problema com contrato': 'contrato'
+    'Problema com contrato': 'contrato',
+    'Direito condominial': 'condominial',
+    'Direito criminal': 'criminal'
   };
   return map[text] || 'contrato';
 }

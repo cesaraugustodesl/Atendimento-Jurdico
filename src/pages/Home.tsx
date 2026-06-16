@@ -84,6 +84,8 @@ const areas = [
   "Familia",
   "Contratos",
   "Plano de saude",
+  "Direito condominial",
+  "Direito criminal",
   "Golpes e fraudes",
 ];
 

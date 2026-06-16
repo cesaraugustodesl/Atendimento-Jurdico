@@ -27,10 +27,10 @@ export default function Footer({ onNavigate }: FooterProps) {
               </div>
               <div className="leading-tight">
                 <p className="text-sm uppercase tracking-[0.2em] text-slate-400">
-                  Atendimento Juridico
+                  Perreira e Monteiro
                 </p>
                 <p className="text-xl font-display font-bold text-white">
-                  Inteligente
+                  Advogados
                 </p>
               </div>
             </div>

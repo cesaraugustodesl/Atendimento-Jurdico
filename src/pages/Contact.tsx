@@ -35,6 +35,8 @@ export default function Contact({ onNavigate }: ContactProps) {
       "Familia",
       "Contratos",
       "Saude",
+      "Direito condominial",
+      "Direito criminal",
       "Golpes e fraudes",
       "Outro assunto",
     ],

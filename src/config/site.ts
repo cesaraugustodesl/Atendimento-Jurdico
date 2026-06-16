@@ -19,9 +19,9 @@ export interface CorePageSeo {
 
 export const siteConfig = {
   brand: {
-    name: "Atendimento Juridico Inteligente",
-    shortName: "Atendimento Juridico",
-    tagline: "Triagem juridica clara, rapida e sem juridiques.",
+    name: "Perreira e Monteiro Advogados",
+    shortName: "Perreira e Monteiro",
+    tagline: "Triagem juridica clara, rapida e conectada ao atendimento humano.",
   },
   contact: {
     whatsappNumber: "5511999999999",
@@ -37,7 +37,7 @@ export const siteConfig = {
   },
   seo: {
     siteUrl: "https://atendimentojuridico.vercel.app",
-    defaultTitle: "Atendimento Juridico Inteligente",
+    defaultTitle: "Perreira e Monteiro Advogados",
     defaultDescription:
       "Triagem juridica com IA, simuladores juridicos, contato humano e conteudo pratico para organizar seu caso e decidir o proximo passo.",
     defaultOgImage: "/og-cover.svg",
@@ -98,7 +98,7 @@ export const corePageSeo: Record<Page, CorePageSeo> = {
   chat: {
     title: "Chat juridico com IA para triagem inicial e organizacao do caso",
     description:
-      "Use o chat juridico para organizar fatos, documentos e proximos passos antes da consulta. Ideal para consumidor, familia, saude, contratos e golpes.",
+      "Use o chat juridico para organizar fatos, documentos e proximos passos antes da consulta. Ideal para consumidor, familia, saude, contratos, condominial, criminal e golpes.",
   },
   contact: {
     title: "Contato para analise juridica humana",

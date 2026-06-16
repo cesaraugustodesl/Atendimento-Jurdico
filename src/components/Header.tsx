@@ -23,17 +23,17 @@ export default function Header({ currentPage, onNavigate }: HeaderProps) {
               onNavigate(href);
               closeMenu();
             }}
-            className="flex items-center gap-3 text-white hover:text-sky-300"
+            className="flex min-w-0 items-center gap-3 text-white hover:text-sky-300"
           >
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-blue-700 shadow-lg shadow-sky-900/40">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-blue-700 shadow-lg shadow-sky-900/40 sm:h-11 sm:w-11">
               <Scale className="w-5 h-5" />
             </div>
-            <div className="flex flex-col items-start leading-tight">
-              <span className="text-sm md:text-base font-semibold tracking-wide uppercase text-slate-300">
-                Atendimento Juridico
+            <div className="flex min-w-0 flex-col items-start leading-tight">
+              <span className="max-w-[12rem] truncate text-xs font-semibold uppercase tracking-wide text-slate-300 sm:max-w-none md:text-sm">
+                Perreira e Monteiro
               </span>
-              <span className="text-base md:text-lg font-display font-bold">
-                Inteligente
+              <span className="text-sm font-display font-bold sm:text-base md:text-lg">
+                Advogados
               </span>
             </div>
           </RouteLink>

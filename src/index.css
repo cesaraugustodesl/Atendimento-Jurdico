@@ -52,11 +52,11 @@
   }
 
   h1 {
-    @apply text-5xl md:text-6xl;
+    @apply text-4xl sm:text-5xl md:text-6xl;
   }
 
   h2 {
-    @apply text-4xl md:text-5xl;
+    @apply text-3xl sm:text-4xl md:text-5xl;
   }
 
   h3 {
@@ -82,7 +82,7 @@
 
 @layer components {
   .container-custom {
-    @apply mx-auto max-w-6xl px-4 sm:px-6 lg:px-8;
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
   }
 
   .font-display {
@@ -91,7 +91,7 @@
   }
 
   .section-spacing {
-    @apply py-16 md:py-24;
+    @apply py-12 md:py-20 lg:py-24;
   }
 
   .page-frame {
@@ -143,7 +143,7 @@
   }
 
   .surface-panel {
-    @apply rounded-[28px] border shadow-2xl;
+    @apply rounded-3xl border shadow-2xl sm:rounded-[28px];
     background:
       linear-gradient(180deg, rgba(30, 41, 59, 0.92) 0%, rgba(15, 23, 42, 0.94) 100%);
     border-color: var(--border-subtle);
@@ -202,7 +202,7 @@
   }
 
   .hero-layout {
-    @apply grid gap-10 lg:grid-cols-[1.18fr_0.82fr];
+    @apply grid gap-8 lg:grid-cols-[1.18fr_0.82fr] lg:gap-10;
   }
 
   .hero-copy {
@@ -218,8 +218,8 @@
   }
 
   .hero-entry-card {
-    @apply block rounded-[26px] border bg-gradient-to-br p-6 text-left;
-    min-height: 176px;
+    @apply block rounded-3xl border bg-gradient-to-br p-5 text-left sm:p-6;
+    min-height: 156px;
   }
 
   .hero-entry-card:hover {
