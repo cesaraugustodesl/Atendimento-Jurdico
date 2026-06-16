@@ -476,10 +476,16 @@ export default function Home({ onNavigate }: HomeProps) {
                 Falar com a equipe
               </RouteLink>
             </div>
-            <p className="mt-6 text-sm text-slate-500">
-              Contato atual: {siteConfig.contact.whatsappDisplay} ·{" "}
-              {siteConfig.contact.email}
-            </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-3 text-sm text-slate-400">
+              {siteConfig.contact.people.map((person) => (
+                <span
+                  key={person.email}
+                  className="rounded-full border border-white/10 bg-white/5 px-4 py-2"
+                >
+                  {person.name}: {person.phoneDisplay} · {person.email}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       </section>

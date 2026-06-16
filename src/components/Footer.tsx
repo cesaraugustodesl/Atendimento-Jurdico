@@ -77,14 +77,19 @@ export default function Footer({ onNavigate }: FooterProps) {
                   {siteConfig.contact.addressLine2}
                 </span>
               </li>
-              <li className="flex items-center gap-3">
-                <Phone className="w-4 h-4 text-sky-400" />
-                <span>{siteConfig.contact.phoneDisplay}</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Mail className="w-4 h-4 text-sky-400" />
-                <span>{siteConfig.contact.email}</span>
-              </li>
+              {siteConfig.contact.people.map((person) => (
+                <li key={person.email} className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                  <p className="font-semibold text-white">{person.name}</p>
+                  <div className="mt-2 flex items-center gap-3">
+                    <Phone className="w-4 h-4 text-sky-400" />
+                    <span>{person.phone}</span>
+                  </div>
+                  <div className="mt-2 flex items-center gap-3">
+                    <Mail className="w-4 h-4 text-sky-400" />
+                    <span className="break-all">{person.email}</span>
+                  </div>
+                </li>
+              ))}
               <li className="text-slate-500">{siteConfig.contact.registry}</li>
             </ul>
           </div>

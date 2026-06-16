@@ -261,7 +261,7 @@ export default function Contact({ onNavigate }: ContactProps) {
                       setFormData({ ...formData, whatsapp: e.target.value })
                     }
                     className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-sky-400/50"
-                    placeholder="(11) 99999-9999"
+                    placeholder="(11) 98439-4849"
                   />
                   {errors.whatsapp && (
                     <p className="mt-2 text-xs text-red-300">{errors.whatsapp}</p>
@@ -386,14 +386,22 @@ export default function Contact({ onNavigate }: ContactProps) {
                     <MapPin className="mt-1 h-5 w-5 flex-shrink-0 text-sky-400" />
                     <span>{siteConfig.contact.addressFull}</span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Phone className="h-5 w-5 flex-shrink-0 text-sky-400" />
-                    <span>{siteConfig.contact.phoneDisplay}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Mail className="h-5 w-5 flex-shrink-0 text-sky-400" />
-                    <span>{siteConfig.contact.email}</span>
-                  </div>
+                  {siteConfig.contact.people.map((person) => (
+                    <div
+                      key={person.email}
+                      className="rounded-3xl border border-white/10 bg-white/5 p-4"
+                    >
+                      <p className="font-semibold text-white">{person.name}</p>
+                      <div className="mt-3 flex items-center gap-3">
+                        <Phone className="h-5 w-5 flex-shrink-0 text-sky-400" />
+                        <span>{person.phone}</span>
+                      </div>
+                      <div className="mt-3 flex items-center gap-3">
+                        <Mail className="h-5 w-5 flex-shrink-0 text-sky-400" />
+                        <span className="break-all">{person.email}</span>
+                      </div>
+                    </div>
+                  ))}
                   <div className="flex items-center gap-3">
                     <Calendar className="h-5 w-5 flex-shrink-0 text-sky-400" />
                     <span>{siteConfig.contact.officeHours}</span>

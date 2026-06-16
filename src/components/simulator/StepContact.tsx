@@ -92,7 +92,7 @@ export default function StepContact({
             type="tel"
             value={whatsapp}
             onChange={(e) => onWhatsappChange(formatPhone(e.target.value))}
-            placeholder="(11) 99999-9999"
+            placeholder="(11) 98439-4849"
             className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-4 text-white placeholder-slate-500 outline-none focus:border-sky-400/50"
           />
         </div>
