@@ -2,10 +2,16 @@ import type { Metadata } from "next";
 import { siteConfig } from "./site-config";
 
 const MAX_TITLE = 58;
+const BRAND_SUFFIX = ` | ${siteConfig.firmName}`;
 
-function normalizeTitle(title: string) {
+function buildSeoTitle(title: string) {
   const clean = title.replace(/\s+/g, " ").trim();
-  return clean.length <= MAX_TITLE ? clean : clean.slice(0, MAX_TITLE).replace(/\s+\S*$/, "").trim();
+  const withoutBrand = clean.replace(new RegExp(`\\s*\\|\\s*${siteConfig.firmName.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&")}$`), "").trim();
+  const available = MAX_TITLE - BRAND_SUFFIX.length;
+  const base = withoutBrand.length > available
+    ? withoutBrand.slice(0, available).replace(/\s+\S*$/, "").trim()
+    : withoutBrand;
+  return `${base}${BRAND_SUFFIX}`;
 }
 
 export function buildMetadata({
@@ -19,7 +25,7 @@ export function buildMetadata({
   path: string;
   image?: string;
 }): Metadata {
-  const seoTitle = normalizeTitle(title);
+  const seoTitle = buildSeoTitle(title);
   const url = `${siteConfig.siteUrl}${path}`;
   const ogImage = image ?? `${siteConfig.siteUrl}/og-image.jpg`;
 
