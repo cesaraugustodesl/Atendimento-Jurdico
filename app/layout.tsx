@@ -8,53 +8,23 @@ import JsonLd from "@/components/JsonLd";
 import { legalServiceSchema } from "@/lib/schema";
 import { siteConfig } from "@/lib/site-config";
 
-const fraunces = Fraunces({
-  subsets: ["latin"],
-  variable: "--font-fraunces",
-  style: ["normal", "italic"],
-  weight: ["400", "500", "600"],
-  display: "swap",
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  weight: ["300", "400", "500", "600"],
-  display: "swap",
-});
-
-const plexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-  weight: ["400", "500"],
-  display: "swap",
-});
+const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces", style: ["normal", "italic"], weight: ["400", "500", "600"], display: "swap" });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", weight: ["300", "400", "500", "600"], display: "swap" });
+const plexMono = IBM_Plex_Mono({ subsets: ["latin"], variable: "--font-mono", weight: ["400", "500"], display: "swap" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.siteUrl),
   title: {
-    default: `${siteConfig.firmNameFull} | Advocacia Estratégica em Direito Criminal`,
+    default: "Pereira e Monteiro Advogados | Direito Criminal",
     template: `%s | ${siteConfig.firmName}`,
   },
-  description:
-    "Advocacia estratégica com atuação principal em Direito Criminal. Atendimento personalizado, sigiloso e tecnicamente rigoroso, do inquérito ao Tribunal do Júri.",
-  keywords: [
-    "advocacia criminal",
-    "advogada criminalista",
-    "direito criminal",
-    "habeas corpus",
-    "audiência de custódia",
-    "tribunal do júri",
-  ],
+  description: "Pereira e Monteiro Advogados: atuação estratégica em Direito Criminal, com atendimento sigiloso em São Paulo – SP.",
+  keywords: ["Pereira e Monteiro Advogados", "advocacia criminal", "advogado criminalista", "direito criminal", "habeas corpus", "audiência de custódia", "tribunal do júri"],
   robots: { index: true, follow: true },
   icons: { icon: "/favicon.ico" },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={`${fraunces.variable} ${inter.variable} ${plexMono.variable}`}>
       <body>
