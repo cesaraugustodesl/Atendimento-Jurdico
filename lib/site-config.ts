@@ -1,25 +1,22 @@
 // ---------------------------------------------------------------------------
 // CONFIGURAÇÃO CENTRAL DO SITE
 // ---------------------------------------------------------------------------
-// Nome do escritório e da advogada são FICTÍCIOS (a pedido do cliente, para
-// fins de desenvolvimento). Tudo o que é dado factual sensível — OAB,
-// endereço, telefone, e-mail, avaliações, número de casos — é mantido como
-// PLACEHOLDER explícito e deve ser substituído antes da publicação.
-// Busque por "PREENCHER:" no projeto para achar todos os pontos pendentes.
+// Dados factuais como OAB, endereço, telefone, e-mail e redes sociais devem
+// ser preenchidos antes da publicação.
 // ---------------------------------------------------------------------------
 
 export const siteConfig = {
-  lawyerName: "Helena Marchetti",
-  lawyerFullName: "Dra. Helena Marchetti",
-  firmName: "Marchetti Advocacia",
-  firmNameFull: "Marchetti Advocacia Criminal",
+  lawyerName: "Pereira e Monteiro",
+  lawyerFullName: "Pereira e Monteiro",
+  firmName: "Pereira e Monteiro Advogados",
+  firmNameFull: "Pereira e Monteiro Advogados Criminal",
   oab: "PREENCHER: OAB/UF nº 000.000",
-  siteUrl: "https://www.marchettiadvocacia.com.br", // PREENCHER: domínio definitivo
-  email: "PREENCHER: contato@marchettiadvocacia.com.br",
+  siteUrl: "https://www.pereiraemonteiroadvogados.com.br", // PREENCHER: domínio definitivo
+  email: "PREENCHER: contato@pereiraemonteiroadvogados.com.br",
   phoneDisplay: "PREENCHER: (00) 0000-0000",
   whatsappNumber: "5500000000000", // PREENCHER: DDI+DDD+número, apenas dígitos
   whatsappMessage:
-    "Olá, gostaria de falar com a Dra. Helena Marchetti sobre uma questão jurídica.",
+    "Olá, gostaria de falar com Pereira e Monteiro Advogados sobre uma questão jurídica.",
   address: {
     line1: "PREENCHER: Rua/Avenida, número, sala",
     line2: "PREENCHER: Bairro, Cidade – UF, CEP",
@@ -44,11 +41,7 @@ export type NavItem = {
 export const primaryNav: NavItem[] = [
   { label: "Sobre", href: "/sobre" },
   { label: "Direito Criminal", href: "/direito-criminal" },
-  {
-    label: "Áreas de Atuação",
-    href: "/areas",
-    children: [], // preenchido dinamicamente a partir de lib/areas-data.ts
-  },
+  { label: "Áreas de Atuação", href: "/areas", children: [] },
   { label: "Atendimento", href: "/atendimento" },
   { label: "Conteúdos", href: "/blog" },
   { label: "FAQ", href: "/faq" },
