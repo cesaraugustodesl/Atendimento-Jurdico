@@ -15,8 +15,8 @@ const plexMono = IBM_Plex_Mono({ subsets: ["latin"], variable: "--font-mono", we
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.siteUrl),
   title: {
-    default: "Pereira e Monteiro Advogados | Direito Criminal",
-    template: `%s | ${siteConfig.firmName}`,
+    default: "Pereira e Monteiro | Advocacia Criminal",
+    template: "%s",
   },
   description: "Pereira e Monteiro Advogados: atuação estratégica em Direito Criminal, com atendimento sigiloso em São Paulo – SP.",
   keywords: ["Pereira e Monteiro Advogados", "advocacia criminal", "advogado criminalista", "direito criminal", "habeas corpus", "audiência de custódia", "tribunal do júri"],
