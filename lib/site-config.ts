@@ -1,8 +1,8 @@
 // ---------------------------------------------------------------------------
 // CONFIGURAÇÃO CENTRAL DO SITE
 // ---------------------------------------------------------------------------
-// Dados factuais como OAB, e-mail e redes sociais devem ser preenchidos antes
-// da publicação. O escritório não possui endereço físico; atendimento em SP/SP.
+// O escritório não possui endereço físico; atendimento em São Paulo/SP.
+// OAB, e-mail e redes sociais não são exibidos enquanto não forem confirmados.
 // ---------------------------------------------------------------------------
 
 export const siteConfig = {
@@ -10,9 +10,9 @@ export const siteConfig = {
   lawyerFullName: "Pereira e Monteiro",
   firmName: "Pereira e Monteiro Advogados",
   firmNameFull: "Pereira e Monteiro Advogados Criminal",
-  oab: "PREENCHER: OAB/UF nº 000.000",
+  oab: "",
   siteUrl: "https://www.pereiraemonteiroadvogados.com.br",
-  email: "PREENCHER: contato@pereiraemonteiroadvogados.com.br",
+  email: "",
   phoneDisplay: "+55 (11) 98439-4849",
   whatsappNumber: "5511984394849",
   whatsappMessage:
@@ -27,8 +27,8 @@ export const siteConfig = {
     { label: "Plantão criminal", value: "24 horas, mediante contato prévio" },
   ],
   social: {
-    instagram: "PREENCHER: https://instagram.com/...",
-    linkedin: "PREENCHER: https://linkedin.com/in/...",
+    instagram: "",
+    linkedin: "",
   },
 };
 
