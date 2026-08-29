@@ -1,8 +1,8 @@
 // ---------------------------------------------------------------------------
 // CONFIGURAÇÃO CENTRAL DO SITE
 // ---------------------------------------------------------------------------
-// O escritório não possui endereço físico; atendimento em São Paulo/SP.
-// OAB, e-mail e redes sociais não são exibidos enquanto não forem confirmados.
+// O escritório não possui endereço físico. Atendimento em São Paulo/SP.
+// Dados profissionais ainda não informados permanecem fora do site público.
 // ---------------------------------------------------------------------------
 
 export const siteConfig = {
