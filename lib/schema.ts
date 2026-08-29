@@ -1,33 +1,34 @@
 import { siteConfig } from "./site-config";
 
+const address = {
+  "@type": "PostalAddress",
+  addressLocality: "São Paulo",
+  addressRegion: "SP",
+  addressCountry: "BR",
+};
+
 export function legalServiceSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "LegalService",
-    name: siteConfig.firmNameFull,
+    name: siteConfig.firmName,
     url: siteConfig.siteUrl,
     image: `${siteConfig.siteUrl}/og-image.jpg`,
-    priceRange: "$$",
-    areaServed: "BR",
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: siteConfig.address.line1,
-      addressLocality: siteConfig.address.line2,
-      addressCountry: "BR",
-    },
+    areaServed: { "@type": "City", name: "São Paulo" },
+    address,
     telephone: siteConfig.phoneDisplay,
-    email: siteConfig.email,
     founder: {
       "@type": "Person",
       name: siteConfig.lawyerFullName,
-      jobTitle: "Advogada",
+      jobTitle: "Advogada Criminalista",
     },
     knowsAbout: [
       "Direito Criminal",
       "Processo Penal",
-      "Direito de Família",
-      "Direito Civil",
-      "Direito Empresarial",
+      "Audiência de Custódia",
+      "Habeas Corpus",
+      "Inquérito Policial",
+      "Tribunal do Júri",
     ],
   };
 }
@@ -35,19 +36,24 @@ export function legalServiceSchema() {
 export function attorneySchema() {
   return {
     "@context": "https://schema.org",
-    "@type": "Attorney",
+    "@type": "Person",
     name: siteConfig.lawyerFullName,
     url: `${siteConfig.siteUrl}/sobre`,
-    image: `${siteConfig.siteUrl}/images/advogada.jpg`,
     jobTitle: "Advogada Criminalista",
     worksFor: {
-      "@type": "Organization",
-      name: siteConfig.firmNameFull,
+      "@type": "LegalService",
+      name: siteConfig.firmName,
+      url: siteConfig.siteUrl,
     },
-    memberOf: {
-      "@type": "Organization",
-      name: "Ordem dos Advogados do Brasil",
-    },
+  };
+}
+
+export function websiteSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: siteConfig.firmName,
+    url: siteConfig.siteUrl,
   };
 }
 
@@ -58,10 +64,7 @@ export function faqSchema(items: { question: string; answer: string }[]) {
     mainEntity: items.map((item) => ({
       "@type": "Question",
       name: item.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: item.answer,
-      },
+      acceptedAnswer: { "@type": "Answer", text: item.answer },
     })),
   };
 }
@@ -95,10 +98,12 @@ export function articleSchema(post: {
     author: {
       "@type": "Person",
       name: siteConfig.lawyerFullName,
+      url: `${siteConfig.siteUrl}/sobre`,
     },
     publisher: {
       "@type": "Organization",
-      name: siteConfig.firmNameFull,
+      name: siteConfig.firmName,
+      url: siteConfig.siteUrl,
     },
     mainEntityOfPage: `${siteConfig.siteUrl}/blog/${post.slug}`,
   };
